@@ -26,6 +26,9 @@
     "ws": "1.0.1"
   },
   "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.0",
     "freeport": "1.0.5",
     "gulp": "3.9.1",
     "gulp-util": "3.0.7",

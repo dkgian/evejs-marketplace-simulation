@@ -5,7 +5,7 @@
 // - transfers production revenues once machines finished tasks successfully
 
 // This is a template for extending the base eve Agent prototype
-const eve = require('../../index')
+// const eve = require('../../index')
 
 function MarketAgent(id) {
   eve.Agent.call(this, id)
@@ -42,4 +42,4 @@ MarketAgent.prototype.transferRevenue = function (machine, amount) {
   this.send(machine, amount)
 }
 
-module.exports = MarketAgent
+// module.exports = MarketAgent

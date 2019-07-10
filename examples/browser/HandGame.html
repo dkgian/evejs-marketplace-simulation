@@ -36,6 +36,7 @@
 
         // Create agent
         var player1 = new HandGameAgent("player1");
+        var player2 = new HandGameAgent("player2");
         // play a single match
         play();
 
@@ -45,10 +46,9 @@
           var hand1 = player1.rpcFunctions.getHand();
 
           //parameters to send to request a hand of the player2
-          var to = 'ws://localhost:8082/agents/player2';
           var rpcMessage = {"jsonrpc":"2.0", "id":1, "method":"getHand", "params":{}};
 
-          player1.rpc.request(to, rpcMessage).then(function(message){
+          player1.rpc.request('player2', rpcMessage).then(function(message){
             console.log("Reply: " + JSON.stringify(message));
 
             // Get player2 hand

@@ -3,7 +3,7 @@
 // - the execution of certain production tasks
 
 // This is a template for extending the base eve Agent prototype
-const eve = require('../../index')
+// const eve = require('../../index')
 
 function MachineAgent(id, props) {
   eve.Agent.call(this, id)
@@ -29,9 +29,11 @@ MachineAgent.prototype.receive = function (from, message) {
       console.log('bid result')
       break
     case 'reward':
-      console.log(`${this.id} balance: `, this.props)
-      this.props = this.props + message.amount
-      console.log(`${this.id} balance: `, this.props)
+      this.props = {
+        ...this.props,
+        balance: this.props.balance + message.amount,
+      }
+      console.log(`${this.id}: `, this.props)
       break
     default:
       console.log('idunno')
@@ -43,4 +45,4 @@ MachineAgent.prototype.executeTask = function(task) {
 }
 
 
-module.exports = MachineAgent
+// module.exports = MachineAgent

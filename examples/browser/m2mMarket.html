@@ -1,59 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>M2M-Market</title>
+	<meta charset="UTF-8">
+	<title>M2M-market</title>
 	<script src="../../dist/eve.js"></script>
+	<script src="../agents/MachineAgent.js"></script>
+	<script src="../agents/MarketAgent.js"></script>
 </head>
 <body>
-<script>
-  /**
-   * Custom agent prototype
-   * @param {String} id
-   * @constructor
-   * @extend eve.Agent
-   */
-  function HelloAgent(id) {
-    // execute super constructor
-    eve.Agent.call(this, id);
+<h1>m2m</h1>
+<p id="player1">Machine1: <span id="handP1"></span></p>
+<p id="player2">Machine2: <span id="handP2"></span></p>
+<p>winner: <span id="winner"></span> </p>
+<button type="button" onclick="startSession()">New session!</button>
 
-    // connect to all transports configured by the system
-    this.connect(eve.system.transports.getAll());
-  }
-
-  // extend the eve.Agent prototype
-  HelloAgent.prototype = Object.create(eve.Agent.prototype);
-  HelloAgent.prototype.constructor = HelloAgent;
-
-  /**
-   * Send a greeting to an agent
-   * @param {String} to
-   */
-  HelloAgent.prototype.sayHello = function(to) {
-    this.send(to, 'Hello ' + to + '!');
-  };
-
-  /**
-   * Handle incoming greetings. This overloads the default receive,
-   * so we can't use HelloAgent.on(pattern, listener) anymore
-   * @param {String} from     Id of the sender
-   * @param {*} message       Received message, a JSON object (often a string)
-   */
-  HelloAgent.prototype.receive = function(from, message) {
-    document.write(from + ' said: ' + JSON.stringify(message) + '<br>');
-
-    if (message.indexOf('Hello') === 0) {
-      // reply to the greeting
-      this.send(from, 'Hi ' + from + ', nice to meet you!');
-    }
-  };
-
-  // create two agents
-  var agent1 = new HelloAgent('agent1');
-  var agent2 = new HelloAgent('agent2');
-
-  // send a message to agent1
-  agent2.send('agent1', 'Hello agent1!');
-
-</script>
+<script src="../simulation/m2m_market_simulation.js"></script>
 </body>
 </html>

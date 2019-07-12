@@ -37,7 +37,7 @@ MarketAgent.prototype = Object.create(eve.Agent.prototype)
 MarketAgent.prototype.constructor = MarketAgent
 
 MarketAgent.prototype.selectBestOffer = function () {
-  const enoughBidOffer = bidOfferList.length === 3
+  const enoughBidOffer = (bidOfferList.length === 3)
   if (enoughBidOffer) {
     return findBestOffer(bidOfferList)
   }
@@ -64,6 +64,16 @@ MarketAgent.prototype.receive = async function (from, message) {
       // eslint-disable-next-line no-case-declarations
       const bestOffer = await this.selectBestOffer()
       this.assignTask(bestOffer)
+      break
+    case 'task_done':
+      console.log('pay for ', from)
+      // eslint-disable-next-line no-case-declarations
+      const payForTask = {
+        ...message,
+        amount: Number(message.price),
+        type: 'reward',
+      }
+      this.transferRevenue(message.machine, payForTask)
       break
     default:
       break

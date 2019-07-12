@@ -34,27 +34,19 @@ const machine3 = new MachineAgent('machine3', {
   ],
 })
 
-const testBidAsking = {
-  type: 'bid_asking',
-  task: {
-    id: 1,
-    name: 'coating',
-  },
-}
-
 // function to startSession a single match between player1 and player2
 function startSession() {
+  const tasks = ['coating', 'grinding', 'case-hardening']
+  const testTask = {
+    type: 'bid_asking',
+    task: {
+      id: 1,
+      name: tasks[Math.floor(Math.random() * 3)],
+    },
+  }
+  console.log('New Task: ', testTask)
   // send task to market
-  market.openBidSession(['machine1', 'machine2', 'machine3'], testBidAsking)
-  // transfer revenue
-  // market.transferRevenue('machine1', {
-  //   type: 'reward',
-  //   amount: 10,
-  // })
-  // market.transferRevenue('machine2', {
-  //   type: 'reward',
-  //   amount: 5,
-  // })
+  market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
 
   document.getElementById('market').innerHTML = JSON.stringify(market.props)
   document.getElementById('machine1').innerHTML = JSON.stringify(machine1.props)

@@ -37,6 +37,19 @@ MachineAgent.prototype.placeABid = function (message) {
   }, delaytime)
 }
 
+MachineAgent.prototype.processTask = function (task) {
+  console.log(`${this.id} is processing task`, task)
+  const doneTask = {
+    ...task,
+    type: 'task_done',
+    status: 'done',
+  }
+  setTimeout(() => {
+    this.send('market', doneTask).done()
+    return null
+  }, 5000)
+}
+
 MachineAgent.prototype.receive = function (from, message) {
   // ... handle incoming messages
   switch (message.type) {
@@ -45,6 +58,7 @@ MachineAgent.prototype.receive = function (from, message) {
       break
     case 'task_assigning':
       console.log(`${this.id} get the task `, message)
+      this.processTask(message)
       break
     case 'reward':
       this.props = {
@@ -52,6 +66,7 @@ MachineAgent.prototype.receive = function (from, message) {
         balance: this.props.balance + message.amount,
       }
       console.log(`${this.id}: `, this.props)
+      console.log('FINISH SESSION!')
       break
     default:
       console.log(message)

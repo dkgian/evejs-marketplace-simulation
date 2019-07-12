@@ -6,6 +6,7 @@
 // const eve = require('../../index')
 
 function MachineAgent(id, props) {
+  /* eslint-disable no-undef */
   eve.Agent.call(this, id)
 
   this.props = props
@@ -19,14 +20,31 @@ function MachineAgent(id, props) {
 MachineAgent.prototype = Object.create(eve.Agent.prototype)
 MachineAgent.prototype.constructor = MachineAgent
 
+MachineAgent.prototype.placeABid = function (message) {
+  const canDo = this.props.capabilities.includes(message.task.name)
+  const price = canDo ? (Math.random() * 10).toFixed(3) : null
+  const delaytime = Math.random() * 5000
+
+  const bid = {
+    ...message,
+    type: 'bid_offering',
+    machine: this.id,
+    price,
+  }
+  // console.log(`${this.id} places`, bid)
+  setTimeout(() => {
+    this.send('market', bid).done()
+  }, delaytime)
+}
+
 MachineAgent.prototype.receive = function (from, message) {
   // ... handle incoming messages
   switch (message.type) {
-    case 'bid':
-      console.log('bid now...')
+    case 'bid_asking':
+      this.placeABid(message)
       break
-    case 'bid_result':
-      console.log('bid result')
+    case 'task_assigning':
+      console.log(`${this.id} get the task `, message)
       break
     case 'reward':
       this.props = {
@@ -36,12 +54,13 @@ MachineAgent.prototype.receive = function (from, message) {
       console.log(`${this.id}: `, this.props)
       break
     default:
-      console.log('idunno')
+      console.log(message)
   }
 }
 
-MachineAgent.prototype.executeTask = function(task) {
+MachineAgent.prototype.executeTask = function (task) {
   // the execution of certain production tasks
+  console.log('execute .. ', task)
 }
 
 

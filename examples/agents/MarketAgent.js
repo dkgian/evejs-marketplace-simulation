@@ -7,26 +7,71 @@
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
 
-function MarketAgent(id) {
+let bidOfferList = []
+
+function MarketAgent(id, props) {
   eve.Agent.call(this, id)
+  this.props = props
+
   // connect to all transports provided by the system
   this.connect(eve.system.transports.getAll())
 
   // ... other initialization
-  this.extend('request')
+}
+
+function findBestOffer(arr) {
+  const bidList = arr.filter(element => element.price !== null)
+  let bestOffer = bidList[0]
+  // eslint-disable-next-line no-plusplus
+  for (let i = 1; i < bidList.length; i++) {
+    const nextOffer = bidList[i]
+    const nextOfferPrice = nextOffer.price
+    bestOffer = (nextOfferPrice !== null && nextOfferPrice < bestOffer.price)
+      ? nextOffer : bestOffer
+  }
+  bidOfferList = []
+  return bestOffer
 }
 
 MarketAgent.prototype = Object.create(eve.Agent.prototype)
 MarketAgent.prototype.constructor = MarketAgent
 
-MarketAgent.prototype.receive = function (from, message) {
+MarketAgent.prototype.selectBestOffer = function () {
+  const enoughBidOffer = bidOfferList.length === 3
+  if (enoughBidOffer) {
+    return findBestOffer(bidOfferList)
+  }
+}
+
+MarketAgent.prototype.assignTask = function (bestOffer) {
+  if (bestOffer === undefined) {
+    return null
+  }
+
+  const bidResult = {
+    ...bestOffer,
+    type: 'task_assigning',
+  }
+  return this.send(bestOffer.machine, bidResult).done()
+}
+
+MarketAgent.prototype.receive = async function (from, message) {
   // ... handle incoming messages
+  console.log(`${from} -> ${this.id} : `, message)
+  switch (message.type) {
+    case 'bid_offering':
+      bidOfferList.push(message)
+      // eslint-disable-next-line no-case-declarations
+      const bestOffer = await this.selectBestOffer()
+      this.assignTask(bestOffer)
+      break
+    default:
+      break
+  }
 }
 
 MarketAgent.prototype.openBidSession = function (machines, task) {
-  machines.map(machine => {
-    this.send(machine, task)
-  })
+  machines.map(machine => this.send(machine, task).done())
 }
 
 MarketAgent.prototype.selectBestBid = function (BidList) {

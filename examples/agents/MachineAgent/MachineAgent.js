@@ -82,18 +82,12 @@ function receiveMessage() {
   }
 }
 
-const calculatePrice = () => {
-  console.log('calculate price')
-  return 1
-}
-
 MachineAgent.prototype = Object.create(eve.Agent.prototype)
 MachineAgent.prototype.constructor = MachineAgent
 
 MachineAgent.prototype.receive = receiveMessage()
 MachineAgent.prototype.placeABid = placeABid()
 MachineAgent.prototype.processTask = processTask()
-MachineAgent.prototype.calculatePrice = calculatePrice()
 
 
 // module.exports = MachineAgent

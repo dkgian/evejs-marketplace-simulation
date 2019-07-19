@@ -25,6 +25,7 @@
     "pubnub": "3.9.2",
     "seed-random": "2.2.0",
     "uuid-v4": "0.1.0",
+    "vis": "^4.21.0",
     "ws": "^7.1.0"
   },
   "devDependencies": {

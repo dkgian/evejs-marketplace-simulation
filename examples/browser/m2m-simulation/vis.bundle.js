@@ -22,21 +22,24 @@ const machine1 = new MachineAgent('machine1', {
     'grinding',
     'coating',
   ],
+  status: 'active',
 })
 const machine2 = new MachineAgent('machine2', {
-  balance: 20,
+  balance: 10,
   capabilities: [
     'grinding',
     'case-hardening',
   ],
+  status: 'active',
 })
 
 const machine3 = new MachineAgent('machine3', {
-  balance: 40,
+  balance: 10,
   capabilities: [
     'coating',
     'case-hardening',
   ],
+  status: 'active',
 })
 
 // function to startSession a single match between player1 and player2
@@ -135,42 +138,52 @@ const options = {
 }
 // eslint-disable-next-line no-unused-vars
 const network = new vis.Network(container, data, options)
-
+// event when click node/agent for switching tab
 network.on('click', (properties) => {
   const ids = properties.nodes
   const clickedNodes = nodes.get(ids)
-  console.log('clicked nodes:', clickedNodes)
+  console.log('Clicked node: ', clickedNodes)
 })
 
+
 function updateNetwork() {
-  const newColor = `#${Math.floor((Math.random() * 255 * 255 * 255))
-    .toString(16)}`
-  const active = 'lime'
-  const busy = 'red'
-  // eslint-disable-next-line no-unused-vars
-  const idle = 'orange'
-  nodes.update([
+  function getNodeColorByStatus(status) {
+    const active = 'lime'
+    const busy = 'red'
+    const idle = 'orange'
+
+    if (status === 'active') {
+      return active
+    }
+    if (status === 'idle') {
+      return idle
+    }
+    return busy
+  }
+
+  const currentMachinesStatus = [
     {
       id: 1,
-      color: { background: active },
-      title: JSON.stringify(machine1.props),
+      color: { background: getNodeColorByStatus(machine1.props.status) },
+      title: machine1.props,
     },
     {
       id: 2,
-      color: { background: busy },
+      color: { background: getNodeColorByStatus(machine2.props.status) },
       title: JSON.stringify(machine2.props),
     },
     {
       id: 3,
-      color: { background: newColor },
+      color: { background: getNodeColorByStatus(machine3.props.status) },
       title: JSON.stringify(machine3.props),
     },
-  ])
+  ]
+  nodes.update(currentMachinesStatus)
 
   edges.update([])
 }
 
-setInterval(() => updateNetwork(), 1000)
+setInterval(() => updateNetwork(), 500)
 changeColorBtn.click(() => updateNetwork())
 
 
@@ -179,7 +192,6 @@ const overviewNav = $('#overviewNav')
 const machine1Nav = $('#machine1Nav')
 const machine2Nav = $('#machine2Nav')
 const machine3Nav = $('#machine3Nav')
-
 const pages = $('.page')
 const overviewPage = $('#overviewPage')
 const machine1Page = $('#machine1Page')

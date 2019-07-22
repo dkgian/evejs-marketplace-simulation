@@ -40,16 +40,18 @@ function placeABid() {
 function processTask() {
   return function (task) {
     console.log(`${this.id} is processing task`, task)
+    this.props.status = 'busy'
     const doneTask = {
       ...task,
       type: 'task_done',
       status: 'done',
     }
     setTimeout(() => {
+      this.props.status = 'active'
       this.send('market', doneTask)
         .done()
       return null
-    }, 5000)
+    }, 8000)
   }
 }
 

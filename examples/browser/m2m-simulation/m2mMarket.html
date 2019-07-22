@@ -34,24 +34,24 @@
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav">
-					<li class="nav-item active">
-						<a class="nav-link" onclick="showPage('overview')">Overview <span class="sr-only">(current)</span></a>
+					<li class="nav-item">
+						<a id="overviewNav" class="nav-link">Overview <span class="sr-only">(current)</span></a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" onclick="showPage('machine1')">Machine 1</a>
+						<a id="machine1Nav" class="nav-link">Machine 1</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" onclick="showPage('machine2')">Machine 2</a>
+						<a id="machine2Nav"class="nav-link">Machine 2</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" onclick="showPage('machine3')">Machine 3</a>
+						<a id="machine3Nav" class="nav-link">Machine 3</a>
 					</li>
 				</ul>
 			</div>
 		</nav>
 
 		<div class="container">
-			<div class="overview row">
+			<div id="overviewPage" class="page overview row">
 				<div class="col">
 					<!--market network map-->
 					<div id="networkVis" class="my-1"></div>
@@ -67,15 +67,24 @@
 				</div>
 			</div>
 
-			<div class="machine1 d-none">
-				<h4>Machine 1 page</h4>
+			<div id="machine1Page" class="page machine1 row d-none">
+				<div class="log col">
+					<p>LOG HERE!</p>
+					<pre>
+						<code>234</code>
+					</pre>
+				</div>
+
+				<div class="info col">
+					<p>MORE INFO HERE!</p>
+				</div>
 			</div>
 
-			<div class="machine2 d-none">
+			<div id="machine2Page" class="page machine2 row d-none">
 				<h4>Machine 2 page</h4>
 			</div>
 
-			<div class="machine3 d-none">
+			<div id="machine3Page" class="page machine3 row d-none">
 				<h4>Machine 3 page</h4>
 			</div>
 
@@ -83,17 +92,6 @@
 
 	</div>
 
-
-	<script>
-		function showPage(page) {
-		  const overview = document.getElementsByClassName("overview")
-		  const machine1 = document.getElementsByClassName("machine1")
-		  const machine2 = document.getElementsByClassName("machine2")
-		  const machine3 = document.getElementsByClassName("machine3")
-			overview[0].classList.add('d-none')
-		  console.log(document.getElementsByClassName(page))
-		}
-	</script>
 	<script src="vis.bundle.js"></script>
 
 	<!-- Optional JavaScript -->

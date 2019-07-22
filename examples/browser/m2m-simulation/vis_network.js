@@ -12,7 +12,6 @@ eve.system.init({
   ],
 })
 
-const startSessionBtn = $('#startSessionBtn')
 
 // Create agent
 const market = new MarketAgent('market')
@@ -59,6 +58,7 @@ function startSession() {
   document.getElementById('machine3').innerHTML = JSON.stringify(machine3.props)
 }
 
+const startSessionBtn = $('#startSessionBtn')
 startSessionBtn.click(() => startSession())
 
 // EVE AGENTS PART=====================END=========================
@@ -171,3 +171,34 @@ function updateNetwork() {
 
 setInterval(() => updateNetwork(), 1000)
 changeColorBtn.click(() => updateNetwork())
+
+
+// Switch tab page
+const overviewNav = $('#overviewNav')
+const machine1Nav = $('#machine1Nav')
+const machine2Nav = $('#machine2Nav')
+const machine3Nav = $('#machine3Nav')
+
+const pages = $('.page')
+const overviewPage = $('#overviewPage')
+const machine1Page = $('#machine1Page')
+const machine2Page = $('#machine2Page')
+const machine3Page = $('#machine3Page')
+
+overviewNav.click(() => {
+  pages.addClass('d-none')
+  overviewPage[0].classList.remove('d-none')
+})
+
+machine1Nav.click(() => {
+  pages.addClass('d-none')
+  machine1Page[0].classList.remove('d-none')
+})
+machine2Nav.click(() => {
+  pages.addClass('d-none')
+  machine2Page[0].classList.remove('d-none')
+})
+machine3Nav.click(() => {
+  pages.addClass('d-none')
+  machine3Page[0].classList.remove('d-none')
+})

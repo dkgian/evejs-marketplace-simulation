@@ -9,6 +9,8 @@ eve.system.init({
   ],
 })
 
+const startSessionBtn = $('#startSessionBtn')
+
 // Create agent
 const market = new MarketAgent('market')
 const machine1 = new MachineAgent('machine1', {
@@ -53,3 +55,5 @@ function startSession() {
   document.getElementById('machine2').innerHTML = JSON.stringify(machine2.props)
   document.getElementById('machine3').innerHTML = JSON.stringify(machine3.props)
 }
+
+startSessionBtn.click(() => startSession())

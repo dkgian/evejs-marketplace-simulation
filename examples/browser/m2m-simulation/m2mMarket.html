@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>M2M-market</title>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+	<!-- market css -->
+	<link rel="stylesheet" href="./m2mMarket.css">
+
+	<!-- Lodash -->
+	<script scr="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.min.js"> </script>
+
+	<!-- EveJs -->
+	<script src="../../../dist/eve.js"></script>
+
+	<!-- VisJs -->
+	<script type="text/javascript" src="https://unpkg.com/vis-network@latest/dist/vis-network.min.js"></script>
+	<link href="https://unpkg.com/vis-network@latest/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
+	<style type="text/css" src></style>
+
+	<!-- Eve agents -->
+	<script src="../../agents/MachineAgent/MachineAgent.js"></script>
+	<script src="../../agents/MarketAgent/MarketAgent.js"></script>
+</head>
+<body>
+	<div>
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-1">
+			<a class="navbar-brand" href="#">Marketplace</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav">
+					<li class="nav-item active">
+						<a class="nav-link" onclick="showPage('overview')">Overview <span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" onclick="showPage('machine1')">Machine 1</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" onclick="showPage('machine2')">Machine 2</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" onclick="showPage('machine3')">Machine 3</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="overview row">
+				<div class="col">
+					<!--market network map-->
+					<div id="networkVis" class="my-1"></div>
+					<button id="changeColorBtn">Change color</button>
+				</div>
+
+				<div class="col">
+					<p>Market agent: <span id="market"></span></p>
+					<p>Machine 1: <span id="machine1"></span></p>
+					<p>Machine 2: <span id="machine2"></span></p>
+					<p>Machine 3: <span id="machine3"></span></p>
+					<button id="startSessionBtn">New session!</button>
+				</div>
+			</div>
+
+			<div class="machine1 d-none">
+				<h4>Machine 1 page</h4>
+			</div>
+
+			<div class="machine2 d-none">
+				<h4>Machine 2 page</h4>
+			</div>
+
+			<div class="machine3 d-none">
+				<h4>Machine 3 page</h4>
+			</div>
+
+		</div>
+
+	</div>
+
+
+	<script>
+		function showPage(page) {
+		  const overview = document.getElementsByClassName("overview")
+		  const machine1 = document.getElementsByClassName("machine1")
+		  const machine2 = document.getElementsByClassName("machine2")
+		  const machine3 = document.getElementsByClassName("machine3")
+			overview[0].classList.add('d-none')
+		  console.log(document.getElementsByClassName(page))
+		}
+	</script>
+	<script src="vis.bundle.js"></script>
+
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

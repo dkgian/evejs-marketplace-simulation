@@ -1,0 +1,18 @@
+.container {
+  max-width: 100%;
+}
+
+.nav-link {
+  cursor: pointer;
+}
+
+#networkVis {
+  width: 100%;
+  height: 300px;
+  border: 1px solid lightgray;
+  background-color: beige;
+}
+
+.vis-up, .vis-down, .vis-left, .vis-right{
+  visibility: hidden;
+}

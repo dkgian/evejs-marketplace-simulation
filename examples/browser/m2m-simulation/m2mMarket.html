@@ -58,33 +58,59 @@
 				</div>
 
 				<div class="col">
-					<p>Market agent: <span id="market"></span></p>
-					<p>Machine 1: <span id="machine1"></span></p>
-					<p>Machine 2: <span id="machine2"></span></p>
-					<p>Machine 3: <span id="machine3"></span></p>
+					<table id="logTable" class="table">
+						<thead>
+						<tr>
+							<th scope="col">Task</th>
+							<th scope="col">Price</th>
+							<th scope="col">By machine</th>
+						</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+
 					<button id="startSessionBtn">New session!</button>
 				</div>
 			</div>
 
 			<div id="machine1Page" class="page machine1 row d-none">
-				<div class="log col">
-					<p>LOG HERE!</p>
-					<pre>
-						<code>234</code>
+				<div class="log col-7">
+					<pre class="log-window">
+						<code id="machine1Log" class="bash"></code>
 					</pre>
+
 				</div>
 
-				<div class="info col">
+				<div class="col-5">
 					<p>MORE INFO HERE!</p>
 				</div>
 			</div>
 
 			<div id="machine2Page" class="page machine2 row d-none">
-				<h4>Machine 2 page</h4>
+				<div class="log col-7">
+					<pre class="log-window">
+						<code id="machine2Log" class="bash"></code>
+					</pre>
+
+				</div>
+
+				<div class="col-5">
+					<p>MORE INFO HERE!</p>
+				</div>
 			</div>
 
 			<div id="machine3Page" class="page machine3 row d-none">
-				<h4>Machine 3 page</h4>
+				<div class="log col-7">
+					<pre class="log-window">
+						<code id="machine3Log" class="bash"></code>
+					</pre>
+
+				</div>
+
+				<div class="col-5">
+					<p>MORE INFO HERE!</p>
+				</div>
 			</div>
 
 		</div>

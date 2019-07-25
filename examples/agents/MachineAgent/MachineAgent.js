@@ -96,6 +96,8 @@ function receiveMessage() {
       case 'task_assigning':
         console.log('Selecting the best offer')
         console.log(`${this.id} get the task `, message)
+        logger(this.id, `${this.id} get the task ${message.task.name}`)
+
         setTimeout(() => {
           this.processTask(message)
         }, 3000)
@@ -108,6 +110,9 @@ function receiveMessage() {
         }
         console.log(`${this.id}: `, this.props)
         console.log('FINISH SESSION!')
+
+        logger(this.id, `${this.id} get reward ${message.amount} $ for task ${message.task.name}`)
+        logger(this.id, `Balance is updated: ${this.props.balance} $`)
         break
       default:
         console.log(message)

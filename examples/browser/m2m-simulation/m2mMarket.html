@@ -52,12 +52,10 @@
 
 		<div class="container">
 			<div id="overviewPage" class="page overview row">
-				<div class="col">
+				<div class="col-6">
 					<!--market network map-->
 					<div id="networkVis" class="my-1"></div>
-				</div>
 
-				<div class="col">
 					<table class="table">
 						<thead>
 						<tr>
@@ -66,11 +64,17 @@
 							<th scope="col">By machine</th>
 						</tr>
 						</thead>
-						<tbody id="marketLog">
+						<tbody id="marketTableLog">
 						</tbody>
 					</table>
 
 					<button id="startSessionBtn">New session!</button>
+				</div>
+
+				<div class="col-6">
+					<pre class="log-window">
+						<code id="marketLog" class="bash"></code>
+					</pre>
 				</div>
 			</div>
 

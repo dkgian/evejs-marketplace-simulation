@@ -14,7 +14,9 @@ eve.system.init({
 
 
 // Create agent
-const market = new MarketAgent('market')
+const market = new MarketAgent('market', {
+  transactionLog: [],
+})
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
   capabilities: [
@@ -54,11 +56,6 @@ function startSession() {
   console.log('New Task: ', testTask)
   // send task to market
   market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
-
-  document.getElementById('market').innerHTML = JSON.stringify(market.props)
-  document.getElementById('machine1').innerHTML = JSON.stringify(machine1.props)
-  document.getElementById('machine2').innerHTML = JSON.stringify(machine2.props)
-  document.getElementById('machine3').innerHTML = JSON.stringify(machine3.props)
 }
 
 const startSessionBtn = $('#startSessionBtn')
@@ -164,7 +161,7 @@ function updateNetwork() {
     {
       id: 1,
       color: { background: getNodeColorByStatus(machine1.props.status) },
-      title: machine1.props,
+      title: JSON.stringify(machine1.props),
     },
     {
       id: 2,
@@ -180,6 +177,24 @@ function updateNetwork() {
   nodes.update(currentMachinesStatus)
 
   edges.update([])
+}
+
+// eslint-disable-next-line no-unused-vars
+function updateTransactionLogTable() {
+  const logTableBody = $('#logTable').find('tbody')
+  const { transactionLog } = market.props
+  console.log(transactionLog)
+
+  // eslint-disable-next-line array-callback-return
+  transactionLog.map((transaction) => {
+    logTableBody.append($('<tr>')
+      .append($('<td>')
+        .text(transaction.task.name))
+      .append($('<td>')
+        .text(transaction.price))
+      .append($('<td>')
+        .text(transaction.machine)))
+  })
 }
 
 setInterval(() => updateNetwork(), 500)

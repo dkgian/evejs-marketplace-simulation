@@ -15,6 +15,32 @@ function MachineAgent(id, props) {
   this.connect(eve.system.transports.getAll())
 }
 
+let machine1LogText = ''
+let machine2LogText = ''
+let machine3LogText = ''
+
+function logger(machine, text) {
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }
+  const now = new Date().toLocaleDateString('en-GB', options)
+
+  const machineLogID = `${machine}Log`
+  const machineLogText = `${now}: ${text}<br>`
+
+  if (machine === 'machine1') {
+    machine1LogText = machine1LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine1LogText
+  } else if (machine === 'machine2') {
+    machine2LogText = machine2LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine2LogText
+  } else if (machine === 'machine3') {
+    machine3LogText = machine3LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine3LogText
+  }
+}
 
 function placeABid() {
   return function (message) {
@@ -28,7 +54,10 @@ function placeABid() {
       machine: this.id,
       price,
     }
-    // console.log(`${this.id} places`, bid)
+
+    const placeBidLog = `${this.id} offers ${price} for task "${message.task.name}"`
+    logger(this.id, placeBidLog)
+
     setTimeout(() => {
       this.send('market', bid)
         .done()
@@ -39,7 +68,9 @@ function placeABid() {
 
 function processTask() {
   return function (task) {
-    console.log(`${this.id} is processing task`, task)
+    const processingLog = `${this.id} is processing ${task.task.name}`
+    logger(this.id, processingLog)
+
     this.props.status = 'busy'
     const doneTask = {
       ...task,

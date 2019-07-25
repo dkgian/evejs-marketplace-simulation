@@ -16,3 +16,17 @@
 .vis-up, .vis-down, .vis-left, .vis-right{
   visibility: hidden;
 }
+
+.log-window {
+  background: #000;
+  color: lawngreen;
+  font-size: 15px;
+  border-radius: 0;
+  border: 0;
+  padding: 8px;
+  height: 350px;
+  white-space: normal;
+}
+
+.bash {
+}

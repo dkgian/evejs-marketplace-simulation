@@ -54,6 +54,7 @@ function assignTask() {
       ...bestOffer,
       type: 'task_assigning',
     }
+    this.props.transactionLog.push(bidResult)
     return this.send(bestOffer.machine, bidResult)
       .done()
   }

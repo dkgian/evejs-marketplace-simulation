@@ -1,8 +1,8 @@
 {
-  "name": "evejs",
-  "version": "0.5.0",
-  "description": "Simple message based agents.",
-  "author": "Jos de Jong <wjosdejong@gmail.com> (https://github.com/josdejong)",
+  "name": "m2m-marketplace",
+  "version": "0.0.1",
+  "description": "m2m-marketplace",
+  "author": "dkg",
   "keywords": [
     "eve",
     "agent",
@@ -11,7 +11,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/enmasseio/evejs.git"
+    "url": "git@github.com:dkgian/evejs-marketplace-simulation.git"
   },
   "dependencies": {
     "amqplib": "0.4.1",

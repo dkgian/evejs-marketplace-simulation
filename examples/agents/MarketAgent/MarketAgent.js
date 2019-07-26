@@ -44,6 +44,17 @@ function selectBestOffer() {
   }
 }
 
+function updateLogTable(bidResult) {
+  const table = document.getElementById('marketTableLog')
+  const row = table.insertRow(0)
+  const cell1 = row.insertCell(0)
+  const cell2 = row.insertCell(1)
+  const cell3 = row.insertCell(2)
+  cell1.innerHTML = bidResult.task.name
+  cell2.innerHTML = bidResult.price
+  cell3.innerHTML = bidResult.machine
+}
+
 function assignTask() {
   return function (bestOffer) {
     if (bestOffer === undefined) {
@@ -55,6 +66,9 @@ function assignTask() {
       type: 'task_assigning',
     }
     this.props.transactionLog.push(bidResult)
+
+    updateLogTable(bidResult)
+
     return this.send(bestOffer.machine, bidResult)
       .done()
   }

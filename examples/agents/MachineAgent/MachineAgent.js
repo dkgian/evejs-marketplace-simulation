@@ -77,6 +77,9 @@ function processTask() {
       type: 'task_done',
       status: 'done',
     }
+
+    document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
+
     setTimeout(() => {
       this.props.status = 'active'
       this.send('market', doneTask)
@@ -111,8 +114,14 @@ function receiveMessage() {
         console.log(`${this.id}: `, this.props)
         console.log('FINISH SESSION!')
 
+        // update visual part
         logger(this.id, `${this.id} get reward ${message.amount} $ for task ${message.task.name}`)
         logger(this.id, `Balance is updated: ${this.props.balance} $`)
+        logger(this.id, `==== Transaction is done ====`)
+
+        document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
+        document.getElementById(`${this.id}balance`).innerHTML = `Balance: ${this.props.balance}`
+
         break
       default:
         console.log(message)

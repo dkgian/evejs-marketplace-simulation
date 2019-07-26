@@ -19,6 +19,21 @@ function MarketAgent(id, props) {
 
   // ... other initialization
 }
+let marketLogText = ''
+function marketLogger(text) {
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }
+  const now = new Date().toLocaleDateString('en-GB', options)
+
+  const newLogText = `${now}: ${text}<br>`
+
+  marketLogText = marketLogText.concat(newLogText)
+  document.getElementById('marketLog').innerHTML = marketLogText
+}
+
 
 function findBestOffer(arr) {
   const bidList = arr.filter(element => element.price !== null)
@@ -68,6 +83,9 @@ function assignTask() {
     this.props.transactionLog.push(bidResult)
 
     updateLogTable(bidResult)
+    setTimeout(() => {
+      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.task.name}"`)
+    }, 2000)
 
     return this.send(bestOffer.machine, bidResult)
       .done()
@@ -80,6 +98,7 @@ function receiveMessage() {
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
       case 'bid_offering':
+        marketLogger(`${from}: place ${message.price}$ for task "${message.task.name}"`)
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
         const bestOffer = this.selectBestOffer()
@@ -93,7 +112,9 @@ function receiveMessage() {
           amount: Number(message.price),
           type: 'reward',
         }
+        marketLogger(`${from} has finished task "${message.task.name}" !`)
         this.transferRevenue(message.machine, payForTask)
+        marketLogger(`===Transaction for task "${message.task.name}" is done!===`)
         break
       default:
         break
@@ -111,6 +132,8 @@ function openBidSession() {
 
 function transferRevenue() {
   return function (machine, amount) {
+    const { price, task: { name } } = amount
+    marketLogger(`Paid ${price}$ to ${machine} for task ${name}.`)
     // transfers production revenues once machines finished tasks successfully
     this.send(machine, amount)
   }

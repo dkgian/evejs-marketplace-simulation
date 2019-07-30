@@ -1,4 +1,5 @@
 const $ = require('jquery')
+const vis = require('vis')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */

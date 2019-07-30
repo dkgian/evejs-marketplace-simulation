@@ -131,7 +131,9 @@ const options = {
   edges: {
     width: 2,
     shadow: true,
+    smooth: false,
   },
+  physics: false,
 }
 // eslint-disable-next-line no-unused-vars
 const network = new vis.Network(container, data, options)

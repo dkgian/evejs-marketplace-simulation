@@ -97,11 +97,22 @@ function receiveMessage() {
     // ... handle incoming messages
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
+      case 'bid_asking':
+        // change color when got new task msg
+        this.props.status = 'received'
+        marketLogger(`${from}: sent a new task "${message.task.name}"`)
+        marketLogger(`${this.id} is preparing for asking bid from machines...`)
+        setTimeout(() => {
+          this.openBidSession(['machine1', 'machine2', 'machine3'], message)
+        }, 5000)
+        break
       case 'bid_offering':
         marketLogger(`${from}: place ${message.price}$ for task "${message.task.name}"`)
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
         const bestOffer = this.selectBestOffer()
+        // done asking, back to undefined
+        this.props.status = 'listening'
         this.assignTask(bestOffer)
         break
       case 'task_done':

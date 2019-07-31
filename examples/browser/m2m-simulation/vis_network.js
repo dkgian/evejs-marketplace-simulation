@@ -15,8 +15,10 @@ eve.system.init({
 
 
 // Create agent
+const taskAgent = new TaskAgent('taskAgent')
 const market = new MarketAgent('market', {
   transactionLog: [],
+  status: 'listening',
 })
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
@@ -56,7 +58,8 @@ function startSession() {
   }
   console.log('New Task: ', testTask)
   // send task to market
-  market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
+  taskAgent.sendTask('market', testTask)
+  // market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
 }
 
 const startSessionBtn = $('#startSessionBtn')
@@ -149,18 +152,31 @@ function updateNetwork() {
   function getNodeColorByStatus(status) {
     const active = 'lime'
     const busy = 'red'
-    const idle = 'orange'
+    const received = 'orange'
+    const listening = 'cyan'
 
     if (status === 'active') {
       return active
     }
-    if (status === 'idle') {
-      return idle
+    if (status === 'received') {
+      return received
     }
-    return busy
+    if (status === 'busy') {
+      return busy
+    }
+    if (status === 'listening') {
+      return listening
+    }
+
+    return undefined
   }
 
   const currentMachinesStatus = [
+    {
+      id: 0,
+      color: { background: getNodeColorByStatus(market.props.status) },
+      title: JSON.stringify(market.props),
+    },
     {
       id: 1,
       color: { background: getNodeColorByStatus(machine1.props.status) },

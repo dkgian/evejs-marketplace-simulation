@@ -160,4 +160,4 @@ MarketAgent.prototype.transferRevenue = transferRevenue()
 MarketAgent.prototype.receive = receiveMessage()
 MarketAgent.prototype.selectBestOffer = selectBestOffer()
 
-// module.exports = MarketAgent
+module.exports = MarketAgent

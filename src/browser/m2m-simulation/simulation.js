@@ -1,6 +1,9 @@
 const $ = require('jquery')
 const vis = require('vis')
+
 const Task = require('../../agents/TaskAgent/Task')
+const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
+const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */

@@ -33,4 +33,4 @@ TaskAgent.prototype.constructor = TaskAgent
 TaskAgent.prototype.sendTask = sendTask()
 TaskAgent.prototype.receive = receiveMessage()
 
-// module.exports = TaskAgent
+module.exports = TaskAgent

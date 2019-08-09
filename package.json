@@ -24,11 +24,13 @@
     "promise": "7.1.1",
     "pubnub": "3.9.2",
     "seed-random": "2.2.0",
+    "uuid": "^3.3.2",
     "uuid-v4": "0.1.0",
     "vis": "^4.21.0",
     "ws": "^7.1.0"
   },
   "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.18.0",

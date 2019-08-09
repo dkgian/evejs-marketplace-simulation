@@ -23,7 +23,7 @@ function receiveMessage() {
 function sendTask() {
   return function (to, task) {
     this.send(to, task)
-    .done()
+      .done()
   }
 }
 

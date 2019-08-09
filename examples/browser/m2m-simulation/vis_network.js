@@ -1,5 +1,6 @@
 const $ = require('jquery')
 const vis = require('vis')
+const Task = require('../../agents/TaskAgent/Task')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -48,14 +49,24 @@ const machine3 = new MachineAgent('machine3', {
 
 // function to startSession a single match between player1 and player2
 function startSession() {
-  const tasks = ['coating', 'grinding', 'case-hardening']
-  const testTask = {
-    type: 'bid_asking',
-    task: {
-      id: 1,
-      name: tasks[Math.floor(Math.random() * 3)],
+  // const tasks = ['coating', 'grinding', 'case-hardening']
+  // const testTask = {
+  //   type: 'bid_asking',
+  //   task: {
+  //     id: 1,
+  //     name: tasks[Math.floor(Math.random() * 3)],
+  //   },
+  // }
+
+  const testTask = new Task({
+    geometry: 'A',
+    materialProperties: {
+      hardness: 5,
     },
-  }
+    requiredSurfaceQuality: 2,
+    amountOfAbrasion: 10,
+  })
+
   console.log('New Task: ', testTask)
   // send task to market
   taskAgent.sendTask('market', testTask)

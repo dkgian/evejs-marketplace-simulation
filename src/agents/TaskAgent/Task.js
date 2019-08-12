@@ -9,4 +9,9 @@ module.exports = function Task({
   this.materialProperties = materialProperties
   this.requiredSurfaceQuality = requiredSurfaceQuality
   this.amountOfAbrasion = amountOfAbrasion
+  this.status = 'pending'
+
+  this.setStatus = (status) => {
+    this.status = status
+  }
 }

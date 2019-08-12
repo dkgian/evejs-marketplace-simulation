@@ -117,7 +117,7 @@ function receiveMessage() {
         // update visual part
         logger(this.id, `${this.id} get reward ${message.amount} $ for task ${message.task.name}`)
         logger(this.id, `Balance is updated: ${this.props.balance} $`)
-        logger(this.id, `==== Transaction is done ====`)
+        logger(this.id, '==== Transaction is done ====')
 
         document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
         document.getElementById(`${this.id}balance`).innerHTML = `Balance: ${this.props.balance}`
@@ -136,5 +136,4 @@ MachineAgent.prototype.receive = receiveMessage()
 MachineAgent.prototype.placeABid = placeABid()
 MachineAgent.prototype.processTask = processTask()
 
-
-// module.exports = MachineAgent
+module.exports = MachineAgent

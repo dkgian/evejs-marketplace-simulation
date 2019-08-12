@@ -4,6 +4,7 @@ const vis = require('vis')
 const Task = require('../../agents/TaskAgent/Task')
 const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
+const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
 
 // EVE AGENTS PART=====================START================================

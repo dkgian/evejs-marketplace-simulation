@@ -4,6 +4,7 @@ const vis = require('vis')
 const Task = require('../../agents/TaskAgent/Task')
 const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
+const Tool = require('../../agents/MachineAgent/Tool')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -24,12 +25,17 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   status: 'listening',
 })
+
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
-  capabilities: [
-    'grinding',
-    'coating',
-  ],
+  geometries: ['A', 'B'],
+  operationalResources: {},
+  currentTool: new Tool({
+    name: 'toolA',
+    forMaterials: ['materialA, materialB'],
+    harness: 10,
+    surfaceQuality: 5,
+  }),
   status: 'active',
 })
 const machine2 = new MachineAgent('machine2', {
@@ -50,6 +56,11 @@ const machine3 = new MachineAgent('machine3', {
   status: 'active',
 })
 
+function init() {
+  console.log('init')
+  console.log('Machine 1 : ', machine1)
+}
+init()
 // function to startSession a single match between player1 and player2
 function startSession() {
   // const tasks = ['coating', 'grinding', 'case-hardening']
@@ -71,9 +82,9 @@ function startSession() {
   })
 
   console.log('New Task: ', testTask)
+  console.log('Machine : ', machine1)
   // send task to market
   taskAgent.sendTask('market', testTask)
-  // market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
 }
 
 const startSessionBtn = $('#startSessionBtn')

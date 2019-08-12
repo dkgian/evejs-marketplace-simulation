@@ -29,7 +29,7 @@ const market = new MarketAgent('market', {
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
   geometries: ['A', 'B'],
-  operationalResources: {},
+  operationalResources: [],
   currentTool: new Tool({
     name: 'toolA',
     forMaterials: ['materialA, materialB'],
@@ -38,27 +38,38 @@ const machine1 = new MachineAgent('machine1', {
   }),
   status: 'active',
 })
+
 const machine2 = new MachineAgent('machine2', {
   balance: 10,
-  capabilities: [
-    'grinding',
-    'case-hardening',
-  ],
+  geometries: ['B', 'C'],
+  operationalResources: [],
+  currentTool: new Tool({
+    name: 'toolB',
+    forMaterials: ['materialA, materialB'],
+    harness: 6,
+    surfaceQuality: 4,
+  }),
   status: 'active',
 })
 
 const machine3 = new MachineAgent('machine3', {
   balance: 10,
-  capabilities: [
-    'coating',
-    'case-hardening',
-  ],
+  geometries: ['A', 'C'],
+  operationalResources: [],
+  currentTool: new Tool({
+    name: 'toolA',
+    forMaterials: ['materialA, materialB'],
+    harness: 5,
+    surfaceQuality: 10,
+  }),
   status: 'active',
 })
 
 function init() {
   console.log('init')
   console.log('Machine 1 : ', machine1)
+  console.log('Machine 2 : ', machine2)
+  console.log('Machine 3 : ', machine3)
 }
 init()
 // function to startSession a single match between player1 and player2

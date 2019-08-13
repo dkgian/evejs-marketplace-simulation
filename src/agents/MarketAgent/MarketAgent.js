@@ -98,9 +98,11 @@ function receiveMessage() {
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
       case 'bid_asking':
+        // eslint-disable-next-line no-case-declarations
+        const task = message
         // change color when got new task msg
         this.props.status = 'received'
-        marketLogger(`${from}: sent a new task "${message.task.name}"`)
+        marketLogger(`${from}: sent a new task "${task.name}"`)
         marketLogger(`${this.id} is preparing for asking bid from machines...`)
         setTimeout(() => {
           this.openBidSession(['machine1', 'machine2', 'machine3'], message)

@@ -66,7 +66,7 @@ function updateLogTable(bidResult) {
   const cell1 = row.insertCell(0)
   const cell2 = row.insertCell(1)
   const cell3 = row.insertCell(2)
-  cell1.innerHTML = bidResult.task.name
+  cell1.innerHTML = bidResult.name
   cell2.innerHTML = bidResult.price
   cell3.innerHTML = bidResult.machine
 }
@@ -79,15 +79,16 @@ function assignTask() {
 
     const bidResult = {
       ...bestOffer,
-      type: 'task_assigning',
+      type: messageType.TASK_ASSIGNING,
     }
     this.props.transactionLog.push(bidResult)
 
     updateLogTable(bidResult)
     setTimeout(() => {
-      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.task.name}"`)
+      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.name}", "${bestOffer.amountOfWorkpieces}" workpieces, geometry "${bestOffer.geometry}" with offer ${bestOffer.price} $`)
     }, 2000)
 
+    debugger
     return this.send(bestOffer.machine, bidResult)
       .done()
   }
@@ -114,12 +115,13 @@ function receiveMessage() {
         const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
         marketLogger(bidOfferLog)
 
-        // bidOfferList.push(message)
-        // // eslint-disable-next-line no-case-declarations
-        // const bestOffer = this.selectBestOffer()
-        // // done asking, back to undefined
-        // this.props.status = 'listening'
-        // this.assignTask(bestOffer)
+        bidOfferList.push(message)
+        // eslint-disable-next-line no-case-declarations
+        const bestOffer = this.selectBestOffer()
+        // done asking, back to undefined
+        this.props.status = 'listening'
+
+        this.assignTask(bestOffer)
         break
       case 'task_done':
         console.log('pay for ', from)

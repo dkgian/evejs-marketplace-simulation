@@ -4,6 +4,7 @@
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
+const messageType = require('../../constants/message_type')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -43,19 +44,39 @@ function logger(machine, text) {
 }
 
 function placeABid() {
-  return function (message) {
-    const canDo = this.props.capabilities.includes(message.task.name)
-    const price = canDo ? (Math.random() * 10).toFixed(3) : null
+  return function (task) {
+    const machine = this.props
+
+    const canDoGeometry = machine.geometries.includes(task.geometry)
+    const canDoHardness = machine.currentTool.harness >= task.materialProperties.hardness
+    const canDoSurfaceQuality = machine.currentTool.surfaceQuality >= task.requiredSurfaceQuality
+
+    const canDo = canDoGeometry && canDoHardness && canDoSurfaceQuality
+
+    // #workpieces * c_power, c_power = 1
+    const cPower = 1
+    const powerPrice = task.amountOfWorkpieces * cPower
+
+    const cLubricant = 1
+    const lubricantPrice = task.amountOfWorkpieces * cLubricant
+
+    const randomConstant = (Math.random() * 10).toFixed(3)
+    const offerPrice = powerPrice + lubricantPrice + Number(randomConstant)
+
+    const price = canDo ? offerPrice : null
     const delaytime = Math.random() * 5000
 
     const bid = {
-      ...message,
-      type: 'bid_offering',
+      ...task,
+      type: messageType.BID_OFFERING,
       machine: this.id,
       price,
     }
 
-    const placeBidLog = `${this.id} offers ${price} for task "${message.task.name}"`
+    const placeBidLog = (price === null)
+      ? `${this.id} is not able to process this task`
+      : `${this.id} offers ${price} for ${task.amountOfWorkpieces} workpieces with geometry "${task.geometry}"`
+
     logger(this.id, placeBidLog)
 
     setTimeout(() => {
@@ -93,7 +114,7 @@ function receiveMessage() {
   return function (from, message) {
     // ... handle incoming messages
     switch (message.type) {
-      case 'bid_asking':
+      case messageType.BID_ASKING:
         this.placeABid(message)
         break
       case 'task_assigning':

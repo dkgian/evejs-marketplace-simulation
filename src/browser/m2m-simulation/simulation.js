@@ -75,15 +75,6 @@ function init() {
 init()
 // function to startSession a single match between player1 and player2
 function startSession() {
-  // const tasks = ['coating', 'grinding', 'case-hardening']
-  // const testTask = {
-  //   type: 'bid_asking',
-  //   task: {
-  //     id: 1,
-  //     name: tasks[Math.floor(Math.random() * 3)],
-  //   },
-  // }
-
   const testTask = new Task({
     geometry: 'A',
     materialProperties: {
@@ -93,8 +84,6 @@ function startSession() {
     amountOfAbrasion: 10,
   })
 
-  console.log('New Task: ', testTask)
-  console.log('Machine : ', machine1)
   // send task to market
   taskAgent.sendTask('market', testTask)
 }

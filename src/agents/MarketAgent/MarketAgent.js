@@ -6,6 +6,7 @@
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
+const messageType = require('../../constants/message_type')
 
 let bidOfferList = []
 
@@ -97,25 +98,28 @@ function receiveMessage() {
     // ... handle incoming messages
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
-      case 'bid_asking':
+      case messageType.BID_ASKING:
         // eslint-disable-next-line no-case-declarations
         const task = message
         // change color when got new task msg
         this.props.status = 'received'
-        marketLogger(`${from}: sent a new task "${task.name}"`)
+        marketLogger(`${from}: Sent a new task "${task.name}", geometry "${task.geometry}", amount "${task.amountOfWorkpieces}"`)
         marketLogger(`${this.id} is preparing for asking bid from machines...`)
         setTimeout(() => {
           this.openBidSession(['machine1', 'machine2', 'machine3'], message)
         }, 5000)
         break
-      case 'bid_offering':
-        marketLogger(`${from}: place ${message.price}$ for task "${message.task.name}"`)
-        bidOfferList.push(message)
+      case messageType.BID_OFFERING:
         // eslint-disable-next-line no-case-declarations
-        const bestOffer = this.selectBestOffer()
-        // done asking, back to undefined
-        this.props.status = 'listening'
-        this.assignTask(bestOffer)
+        const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
+        marketLogger(bidOfferLog)
+
+        // bidOfferList.push(message)
+        // // eslint-disable-next-line no-case-declarations
+        // const bestOffer = this.selectBestOffer()
+        // // done asking, back to undefined
+        // this.props.status = 'listening'
+        // this.assignTask(bestOffer)
         break
       case 'task_done':
         console.log('pay for ', from)

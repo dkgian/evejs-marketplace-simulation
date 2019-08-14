@@ -70709,6 +70709,178 @@ exports["default"] = FloydWarshall;
 /******/ ]);
 });
 },{}],6:[function(require,module,exports){
+// A machine agent represents
+// - the capabilities of the machine and
+// - the execution of certain production tasks
+
+// This is a template for extending the base eve Agent prototype
+// const eve = require('../../index')
+const messageType = require('../../constants/message_type')
+
+function MachineAgent(id, props) {
+  /* eslint-disable no-undef */
+  eve.Agent.call(this, id)
+
+  this.props = props
+
+  // connect to all transports provided by the system
+  this.connect(eve.system.transports.getAll())
+}
+
+let machine1LogText = ''
+let machine2LogText = ''
+let machine3LogText = ''
+
+function logger(machine, text) {
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }
+  const now = new Date().toLocaleDateString('en-GB', options)
+
+  const machineLogID = `${machine}Log`
+  const machineLogText = `${now}: ${text}<br>`
+
+  if (machine === 'machine1') {
+    machine1LogText = machine1LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine1LogText
+  } else if (machine === 'machine2') {
+    machine2LogText = machine2LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine2LogText
+  } else if (machine === 'machine3') {
+    machine3LogText = machine3LogText.concat(machineLogText)
+    document.getElementById(machineLogID).innerHTML = machine3LogText
+  }
+}
+
+function placeABid() {
+  return function (task) {
+    const machine = this.props
+
+    const canDoGeometry = machine.geometries.includes(task.geometry)
+    const canDoHardness = machine.currentTool.harness >= task.materialProperties.hardness
+    const canDoSurfaceQuality = machine.currentTool.surfaceQuality >= task.requiredSurfaceQuality
+
+    const canDo = canDoGeometry && canDoHardness && canDoSurfaceQuality
+
+    // #workpieces * c_power, c_power = 1
+    const cPower = 1
+    const powerPrice = task.amountOfWorkpieces * cPower
+
+    const cLubricant = 1
+    const lubricantPrice = task.amountOfWorkpieces * cLubricant
+
+    const randomConstant = (Math.random() * 10).toFixed(3)
+    const offerPrice = powerPrice + lubricantPrice + Number(randomConstant)
+
+    const price = canDo ? offerPrice : null
+    const delaytime = Math.random() * 5000
+
+    const bid = {
+      ...task,
+      type: messageType.BID_OFFERING,
+      machine: this.id,
+      price,
+    }
+
+    const placeBidLog = (price === null)
+      ? `${this.id} is not able to process this task`
+      : `${this.id} offers ${price} for ${task.amountOfWorkpieces} workpieces with geometry "${task.geometry}"`
+
+    logger(this.id, placeBidLog)
+
+    setTimeout(() => {
+      this.send('market', bid)
+        .done()
+    }, delaytime)
+  }
+}
+
+
+function processTask() {
+  return function (task) {
+    const processingLog = `${this.id} is processing ${task.task.name}`
+    logger(this.id, processingLog)
+
+    this.props.status = 'busy'
+    const doneTask = {
+      ...task,
+      type: 'task_done',
+      status: 'done',
+    }
+
+    document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
+
+    setTimeout(() => {
+      this.props.status = 'active'
+      this.send('market', doneTask)
+        .done()
+      return null
+    }, 8000)
+  }
+}
+
+function receiveMessage() {
+  return function (from, message) {
+    // ... handle incoming messages
+    switch (message.type) {
+      case messageType.BID_ASKING:
+        this.placeABid(message)
+        break
+      case 'task_assigning':
+        console.log('Selecting the best offer')
+        console.log(`${this.id} get the task `, message)
+        logger(this.id, `${this.id} get the task ${message.task.name}`)
+
+        setTimeout(() => {
+          this.processTask(message)
+        }, 3000)
+
+        break
+      case 'reward':
+        this.props = {
+          ...this.props,
+          balance: this.props.balance + message.amount,
+        }
+        console.log(`${this.id}: `, this.props)
+        console.log('FINISH SESSION!')
+
+        // update visual part
+        logger(this.id, `${this.id} get reward ${message.amount} $ for task ${message.task.name}`)
+        logger(this.id, `Balance is updated: ${this.props.balance} $`)
+        logger(this.id, '==== Transaction is done ====')
+
+        document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
+        document.getElementById(`${this.id}balance`).innerHTML = `Balance: ${this.props.balance}`
+
+        break
+      default:
+        console.log(message)
+    }
+  }
+}
+
+MachineAgent.prototype = Object.create(eve.Agent.prototype)
+MachineAgent.prototype.constructor = MachineAgent
+
+MachineAgent.prototype.receive = receiveMessage()
+MachineAgent.prototype.placeABid = placeABid()
+MachineAgent.prototype.processTask = processTask()
+
+module.exports = MachineAgent
+
+},{"../../constants/message_type":12}],7:[function(require,module,exports){
+module.exports = function Tool({
+  name, forMaterials, harness, surfaceQuality,
+}) {
+  this.name = name
+  this.forMaterials = forMaterials || ['X', 'Y', 'Z']
+  this.harness = harness
+  this.surfaceQuality = surfaceQuality
+}
+
+},{}],8:[function(require,module,exports){
 // The market place is simulated by an agent that
 // - asks for bids for certain production tasks
 // - selects best bids
@@ -70717,6 +70889,7 @@ exports["default"] = FloydWarshall;
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
+const messageType = require('../../constants/message_type')
 
 let bidOfferList = []
 
@@ -70808,17 +70981,21 @@ function receiveMessage() {
     // ... handle incoming messages
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
-      case 'bid_asking':
+      case messageType.BID_ASKING:
+        // eslint-disable-next-line no-case-declarations
+        const task = message
         // change color when got new task msg
         this.props.status = 'received'
-        marketLogger(`${from}: sent a new task "${message.task.name}"`)
+        marketLogger(`${from}: Sent a new task "${task.name}", geometry "${task.geometry}", amount "${task.amountOfWorkpieces}"`)
         marketLogger(`${this.id} is preparing for asking bid from machines...`)
         setTimeout(() => {
           this.openBidSession(['machine1', 'machine2', 'machine3'], message)
         }, 5000)
         break
-      case 'bid_offering':
-        marketLogger(`${from}: place ${message.price}$ for task "${message.task.name}"`)
+      case messageType.BID_OFFERING:
+        const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
+        marketLogger(bidOfferLog)
+        debugger
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
         const bestOffer = this.selectBestOffer()
@@ -70873,21 +71050,40 @@ MarketAgent.prototype.selectBestOffer = selectBestOffer()
 
 module.exports = MarketAgent
 
-},{}],7:[function(require,module,exports){
+},{"../../constants/message_type":12}],9:[function(require,module,exports){
 const uuidv1 = require('uuid/v1')
 
+const msgType = require('../../constants/message_type')
+const taskStatus = require('../../constants/task_status')
+
+
 module.exports = function Task({
-  id, name, geometry, materialProperties, requiredSurfaceQuality, amountOfAbrasion,
+  id,
+  type,
+  name,
+  amountOfWorkpieces,
+  geometry,
+  materialProperties,
+  requiredSurfaceQuality,
+  amountOfAbrasion,
 }) {
   this.id = id || uuidv1()
+  this.type = type || msgType.BID_ASKING
   this.name = name || 'grinding'
+  this.amountOfWorkpieces = amountOfWorkpieces || 100
   this.geometry = geometry
-  this.materialProperties = materialProperties
+  this.materialProperties = materialProperties || {}
   this.requiredSurfaceQuality = requiredSurfaceQuality
   this.amountOfAbrasion = amountOfAbrasion
+  this.status = taskStatus.PENDING
+
+  this.setStatus = (status) => {
+    this.status = status
+  }
+  this.getStatus = () => this.status
 }
 
-},{"uuid/v1":4}],8:[function(require,module,exports){
+},{"../../constants/message_type":12,"../../constants/task_status":13,"uuid/v1":4}],10:[function(require,module,exports){
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
@@ -70925,13 +71121,15 @@ TaskAgent.prototype.receive = receiveMessage()
 
 module.exports = TaskAgent
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 const $ = require('jquery')
 const vis = require('vis')
 
 const Task = require('../../agents/TaskAgent/Task')
 const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
+const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
+const Tool = require('../../agents/MachineAgent/Tool')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -70952,43 +71150,55 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   status: 'listening',
 })
+
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
-  capabilities: [
-    'grinding',
-    'coating',
-  ],
+  geometries: ['A', 'B'],
+  operationalResources: [],
+  currentTool: new Tool({
+    name: 'toolA',
+    forMaterials: ['materialA, materialB'],
+    harness: 10,
+    surfaceQuality: 5,
+  }),
   status: 'active',
 })
+
 const machine2 = new MachineAgent('machine2', {
   balance: 10,
-  capabilities: [
-    'grinding',
-    'case-hardening',
-  ],
+  geometries: ['B', 'C'],
+  operationalResources: [],
+  currentTool: new Tool({
+    name: 'toolB',
+    forMaterials: ['materialA, materialB'],
+    harness: 6,
+    surfaceQuality: 4,
+  }),
   status: 'active',
 })
 
 const machine3 = new MachineAgent('machine3', {
   balance: 10,
-  capabilities: [
-    'coating',
-    'case-hardening',
-  ],
+  geometries: ['A', 'C'],
+  operationalResources: [],
+  currentTool: new Tool({
+    name: 'toolA',
+    forMaterials: ['materialA, materialB'],
+    harness: 5,
+    surfaceQuality: 10,
+  }),
   status: 'active',
 })
 
+function init() {
+  console.log('init')
+  console.log('Machine 1 : ', machine1)
+  console.log('Machine 2 : ', machine2)
+  console.log('Machine 3 : ', machine3)
+}
+init()
 // function to startSession a single match between player1 and player2
 function startSession() {
-  // const tasks = ['coating', 'grinding', 'case-hardening']
-  // const testTask = {
-  //   type: 'bid_asking',
-  //   task: {
-  //     id: 1,
-  //     name: tasks[Math.floor(Math.random() * 3)],
-  //   },
-  // }
-
   const testTask = new Task({
     geometry: 'A',
     materialProperties: {
@@ -70998,10 +71208,8 @@ function startSession() {
     amountOfAbrasion: 10,
   })
 
-  console.log('New Task: ', testTask)
   // send task to market
   taskAgent.sendTask('market', testTask)
-  // market.openBidSession(['machine1', 'machine2', 'machine3'], testTask)
 }
 
 const startSessionBtn = $('#startSessionBtn')
@@ -71191,4 +71399,22 @@ machine3Nav.click(() => {
   machine3Page[0].classList.remove('d-none')
 })
 
-},{"../../agents/MarketAgent/MarketAgent":6,"../../agents/TaskAgent/Task":7,"../../agents/TaskAgent/TaskAgent":8,"jquery":1,"vis":5}]},{},[9]);
+},{"../../agents/MachineAgent/MachineAgent":6,"../../agents/MachineAgent/Tool":7,"../../agents/MarketAgent/MarketAgent":8,"../../agents/TaskAgent/Task":9,"../../agents/TaskAgent/TaskAgent":10,"jquery":1,"vis":5}],12:[function(require,module,exports){
+module.exports = {
+  BID_ASKING: 'BID_ASKING',
+  BID_OFFERING: 'BID_OFFERING',
+  BID_RESULT: 'BID_RESULT',
+
+  TASK_DONE: 'TASK_DONE',
+  TASK_ASSIGNING: 'TASK_ASSIGNING',
+  TASK_REWARD: 'TASK_REWARD',
+}
+
+},{}],13:[function(require,module,exports){
+module.exports = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  DONE: 'DONE',
+}
+
+},{}]},{},[11]);

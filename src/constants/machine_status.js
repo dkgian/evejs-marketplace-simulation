@@ -1,0 +1,6 @@
+module.exports = {
+  OFFLINE: 'OFFLINE',
+  AVAILABLE: 'AVAILABLE',
+  PROCESSING: 'PROCESSING',
+  BUSY: 'BUSY',
+}

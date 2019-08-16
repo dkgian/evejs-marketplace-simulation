@@ -109,6 +109,7 @@ function receiveMessage() {
           this.openBidSession(['machine1', 'machine2', 'machine3'], message)
         }, 5000)
         break
+
       case messageType.BID_OFFERING:
         // eslint-disable-next-line no-case-declarations
         const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
@@ -122,17 +123,19 @@ function receiveMessage() {
 
         this.assignTask(bestOffer)
         break
-      case 'task_done':
+
+      case messageType.TASK_DONE:
         console.log('pay for ', from)
         // eslint-disable-next-line no-case-declarations
         const payForTask = {
           ...message,
-          amount: Number(message.price),
-          type: 'reward',
+          type: messageType.TASK_REWARD,
         }
-        marketLogger(`${from} has finished task "${message.task.name}" !`)
-        this.transferRevenue(message.machine, payForTask)
-        marketLogger(`===Transaction for task "${message.task.name}" is done!===`)
+
+        marketLogger(`${from} has finished task "${message.name}" ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces !`)
+
+        this.transferRevenue(payForTask)
+        marketLogger(`===Transaction for task "${message.name}" is done!===`)
         break
       default:
         break
@@ -149,11 +152,18 @@ function openBidSession() {
 
 
 function transferRevenue() {
-  return function (machine, amount) {
-    const { price, task: { name } } = amount
-    marketLogger(`Paid ${price}$ to ${machine} for task ${name}.`)
+  return function (payForTask) {
+    const {
+      name,
+      price,
+      machine,
+      amountOfWorkpieces,
+      geometry,
+    } = payForTask
+
+    marketLogger(`Paid ${price}$ to ${machine} for task ${name} ${amountOfWorkpieces} geometry ${geometry} workpieces.`)
     // transfers production revenues once machines finished tasks successfully
-    this.send(machine, amount)
+    this.send(machine, payForTask)
   }
 }
 

@@ -104,6 +104,10 @@ function processTask() {
 
     setTimeout(() => {
       this.props.status = 'active'
+
+      const doneLog = `${this.id} is done with task ${task.name} and send back to marketplace.`
+      logger(this.id, doneLog)
+
       this.send('market', doneTask)
         .done()
       return null
@@ -128,16 +132,15 @@ function receiveMessage() {
         }, 3000)
 
         break
-      case 'reward':
+
+      case messageType.TASK_REWARD:
         this.props = {
           ...this.props,
-          balance: this.props.balance + message.amount,
+          balance: this.props.balance + message.price,
         }
-        console.log(`${this.id}: `, this.props)
-        console.log('FINISH SESSION!')
 
         // update visual part
-        logger(this.id, `${this.id} get reward ${message.amount} $ for task ${message.task.name}`)
+        logger(this.id, `${this.id} get reward ${message.price} $ for task ${message.name} ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces`)
         logger(this.id, `Balance is updated: ${this.props.balance} $`)
         logger(this.id, '==== Transaction is done ====')
 

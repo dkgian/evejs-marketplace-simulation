@@ -1,4 +1,5 @@
 .idea
+*.bundle.js
 lib-cov
 
 npm-debug.log

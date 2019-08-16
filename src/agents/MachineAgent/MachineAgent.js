@@ -5,6 +5,7 @@
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
 const messageType = require('../../constants/message_type')
+const taskStatus = require('../../constants/task_status')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -89,14 +90,14 @@ function placeABid() {
 
 function processTask() {
   return function (task) {
-    const processingLog = `${this.id} is processing ${task.task.name}`
+    const processingLog = `${this.id} is processing ${task.name}`
     logger(this.id, processingLog)
 
     this.props.status = 'busy'
     const doneTask = {
       ...task,
-      type: 'task_done',
-      status: 'done',
+      type: messageType.TASK_DONE,
+      status: taskStatus.DONE,
     }
 
     document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
@@ -117,10 +118,10 @@ function receiveMessage() {
       case messageType.BID_ASKING:
         this.placeABid(message)
         break
-      case 'task_assigning':
-        console.log('Selecting the best offer')
+
+      case messageType.TASK_ASSIGNING:
         console.log(`${this.id} get the task `, message)
-        logger(this.id, `${this.id} get the task ${message.task.name}`)
+        logger(this.id, `${this.id} get the task ${message.name} ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces.`)
 
         setTimeout(() => {
           this.processTask(message)

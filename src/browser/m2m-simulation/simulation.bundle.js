@@ -70716,6 +70716,7 @@ exports["default"] = FloydWarshall;
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
 const messageType = require('../../constants/message_type')
+const taskStatus = require('../../constants/task_status')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -70800,16 +70801,16 @@ function placeABid() {
 
 function processTask() {
   return function (task) {
-    const processingLog = `${this.id} is processing ${task.task.name}`
+    const processingLog = `${this.id} is processing ${task.name}`
     logger(this.id, processingLog)
 
     this.props.status = 'busy'
     const doneTask = {
       ...task,
-      type: 'task_done',
-      status: 'done',
+      type: messageType.TASK_DONE,
+      status: taskStatus.DONE,
     }
-
+    debugger
     document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
 
     setTimeout(() => {
@@ -70828,10 +70829,10 @@ function receiveMessage() {
       case messageType.BID_ASKING:
         this.placeABid(message)
         break
-      case 'task_assigning':
-        console.log('Selecting the best offer')
+
+      case messageType.TASK_ASSIGNING:
         console.log(`${this.id} get the task `, message)
-        logger(this.id, `${this.id} get the task ${message.task.name}`)
+        logger(this.id, `${this.id} get the task ${message.name} ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces.`)
 
         setTimeout(() => {
           this.processTask(message)
@@ -70870,7 +70871,7 @@ MachineAgent.prototype.processTask = processTask()
 
 module.exports = MachineAgent
 
-},{"../../constants/message_type":12}],7:[function(require,module,exports){
+},{"../../constants/message_type":12,"../../constants/task_status":13}],7:[function(require,module,exports){
 module.exports = function Tool({
   name, forMaterials, harness, surfaceQuality,
 }) {
@@ -70949,7 +70950,7 @@ function updateLogTable(bidResult) {
   const cell1 = row.insertCell(0)
   const cell2 = row.insertCell(1)
   const cell3 = row.insertCell(2)
-  cell1.innerHTML = bidResult.task.name
+  cell1.innerHTML = bidResult.name
   cell2.innerHTML = bidResult.price
   cell3.innerHTML = bidResult.machine
 }
@@ -70962,13 +70963,13 @@ function assignTask() {
 
     const bidResult = {
       ...bestOffer,
-      type: 'task_assigning',
+      type: messageType.TASK_ASSIGNING,
     }
     this.props.transactionLog.push(bidResult)
 
     updateLogTable(bidResult)
     setTimeout(() => {
-      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.task.name}"`)
+      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.name}", "${bestOffer.amountOfWorkpieces}" workpieces, geometry "${bestOffer.geometry}" with offer ${bestOffer.price} $`)
     }, 2000)
 
     return this.send(bestOffer.machine, bidResult)
@@ -70993,14 +70994,16 @@ function receiveMessage() {
         }, 5000)
         break
       case messageType.BID_OFFERING:
+        // eslint-disable-next-line no-case-declarations
         const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
         marketLogger(bidOfferLog)
-        debugger
+
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
         const bestOffer = this.selectBestOffer()
         // done asking, back to undefined
         this.props.status = 'listening'
+
         this.assignTask(bestOffer)
         break
       case 'task_done':

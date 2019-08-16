@@ -66,13 +66,6 @@ const machine3 = new MachineAgent('machine3', {
   status: 'active',
 })
 
-function init() {
-  console.log('init')
-  console.log('Machine 1 : ', machine1)
-  console.log('Machine 2 : ', machine2)
-  console.log('Machine 3 : ', machine3)
-}
-init()
 // function to startSession a single match between player1 and player2
 function startSession() {
   const testTask = new Task({

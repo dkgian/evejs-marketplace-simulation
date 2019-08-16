@@ -88,7 +88,6 @@ function assignTask() {
       marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.name}", "${bestOffer.amountOfWorkpieces}" workpieces, geometry "${bestOffer.geometry}" with offer ${bestOffer.price} $`)
     }, 2000)
 
-    debugger
     return this.send(bestOffer.machine, bidResult)
       .done()
   }

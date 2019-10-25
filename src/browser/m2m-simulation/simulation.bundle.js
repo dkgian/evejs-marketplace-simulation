@@ -10599,179 +10599,36 @@ return jQuery;
 } );
 
 },{}],2:[function(require,module,exports){
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-for (var i = 0; i < 256; ++i) {
-  byteToHex[i] = (i + 0x100).toString(16).substr(1);
-}
 
-function bytesToUuid(buf, offset) {
-  var i = offset || 0;
-  var bth = byteToHex;
-  // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-  return ([bth[buf[i++]], bth[buf[i++]], 
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]]]).join('');
-}
+exports = module.exports = function() {
+	var ret = '', value;
+	for (var i = 0; i < 32; i++) {
+		value = exports.random() * 16 | 0;
+		// Insert the hypens
+		if (i > 4 && i < 21 && ! (i % 4)) {
+			ret += '-';
+		}
+		// Add the next random character
+		ret += (
+			(i === 12) ? 4 : (
+				(i === 16) ? (value & 3 | 8) : value
+			)
+		).toString(16);
+	}
+	return ret;
+};
 
-module.exports = bytesToUuid;
+var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+exports.isUUID = function(uuid) {
+	return uuidRegex.test(uuid);
+};
+
+exports.random = function() {
+	return Math.random();
+};
+
 
 },{}],3:[function(require,module,exports){
-// Unique ID creation requires a high quality random # generator.  In the
-// browser this is a little complicated due to unknown quality of Math.random()
-// and inconsistent support for the `crypto` API.  We do the best we can via
-// feature-detection
-
-// getRandomValues needs to be invoked in a context where "this" is a Crypto
-// implementation. Also, find the complete implementation of crypto on IE11.
-var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
-                      (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
-
-if (getRandomValues) {
-  // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
-  var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
-
-  module.exports = function whatwgRNG() {
-    getRandomValues(rnds8);
-    return rnds8;
-  };
-} else {
-  // Math.random()-based (RNG)
-  //
-  // If all else fails, use Math.random().  It's fast, but is of unspecified
-  // quality.
-  var rnds = new Array(16);
-
-  module.exports = function mathRNG() {
-    for (var i = 0, r; i < 16; i++) {
-      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-      rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-    }
-
-    return rnds;
-  };
-}
-
-},{}],4:[function(require,module,exports){
-var rng = require('./lib/rng');
-var bytesToUuid = require('./lib/bytesToUuid');
-
-// **`v1()` - Generate time-based UUID**
-//
-// Inspired by https://github.com/LiosK/UUID.js
-// and http://docs.python.org/library/uuid.html
-
-var _nodeId;
-var _clockseq;
-
-// Previous uuid creation time
-var _lastMSecs = 0;
-var _lastNSecs = 0;
-
-// See https://github.com/broofa/node-uuid for API details
-function v1(options, buf, offset) {
-  var i = buf && offset || 0;
-  var b = buf || [];
-
-  options = options || {};
-  var node = options.node || _nodeId;
-  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-  // node and clockseq need to be initialized to random values if they're not
-  // specified.  We do this lazily to minimize issues related to insufficient
-  // system entropy.  See #189
-  if (node == null || clockseq == null) {
-    var seedBytes = rng();
-    if (node == null) {
-      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-      node = _nodeId = [
-        seedBytes[0] | 0x01,
-        seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
-      ];
-    }
-    if (clockseq == null) {
-      // Per 4.2.2, randomize (14 bit) clockseq
-      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
-    }
-  }
-
-  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-  // Per 4.2.1.2, use count of uuid's generated during the current clock
-  // cycle to simulate higher resolution clock
-  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-  // Time since last uuid creation (in msecs)
-  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-  // Per 4.2.1.2, Bump clockseq on clock regression
-  if (dt < 0 && options.clockseq === undefined) {
-    clockseq = clockseq + 1 & 0x3fff;
-  }
-
-  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-  // time interval
-  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-    nsecs = 0;
-  }
-
-  // Per 4.2.1.2 Throw error if too many uuids are requested
-  if (nsecs >= 10000) {
-    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
-  }
-
-  _lastMSecs = msecs;
-  _lastNSecs = nsecs;
-  _clockseq = clockseq;
-
-  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-  msecs += 12219292800000;
-
-  // `time_low`
-  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-  b[i++] = tl >>> 24 & 0xff;
-  b[i++] = tl >>> 16 & 0xff;
-  b[i++] = tl >>> 8 & 0xff;
-  b[i++] = tl & 0xff;
-
-  // `time_mid`
-  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-  b[i++] = tmh >>> 8 & 0xff;
-  b[i++] = tmh & 0xff;
-
-  // `time_high_and_version`
-  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-  b[i++] = tmh >>> 16 & 0xff;
-
-  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-  b[i++] = clockseq >>> 8 | 0x80;
-
-  // `clock_seq_low`
-  b[i++] = clockseq & 0xff;
-
-  // `node`
-  for (var n = 0; n < 6; ++n) {
-    b[i + n] = node[n];
-  }
-
-  return buf ? buf : bytesToUuid(b);
-}
-
-module.exports = v1;
-
-},{"./lib/bytesToUuid":2,"./lib/rng":3}],5:[function(require,module,exports){
 /**
  * vis.js
  * https://github.com/almende/vis
@@ -70708,7 +70565,7 @@ exports["default"] = FloydWarshall;
 /***/ })
 /******/ ]);
 });
-},{}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 // A machine agent represents
 // - the capabilities of the machine and
 // - the execution of certain production tasks
@@ -70823,8 +70680,6 @@ function processTask() {
         .done()
       return null
     }, 8000)
-
-
   }
 }
 
@@ -70876,7 +70731,7 @@ MachineAgent.prototype.processTask = processTask()
 
 module.exports = MachineAgent
 
-},{"../../constants/message_type":12,"../../constants/task_status":13}],7:[function(require,module,exports){
+},{"../../constants/message_type":11,"../../constants/task_status":12}],5:[function(require,module,exports){
 module.exports = function Tool({
   name, forMaterials, harness, surfaceQuality,
 }) {
@@ -70886,7 +70741,7 @@ module.exports = function Tool({
   this.surfaceQuality = surfaceQuality
 }
 
-},{}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // The market place is simulated by an agent that
 // - asks for bids for certain production tasks
 // - selects best bids
@@ -71042,7 +70897,6 @@ function openBidSession() {
 
 function transferRevenue() {
   return function (payForTask) {
-
     const {
       name,
       price,
@@ -71069,8 +70923,8 @@ MarketAgent.prototype.selectBestOffer = selectBestOffer()
 
 module.exports = MarketAgent
 
-},{"../../constants/message_type":12}],9:[function(require,module,exports){
-const uuidv1 = require('uuid/v1')
+},{"../../constants/message_type":11}],7:[function(require,module,exports){
+var uuid = require('uuid-v4')
 
 const msgType = require('../../constants/message_type')
 const taskStatus = require('../../constants/task_status')
@@ -71086,10 +70940,10 @@ module.exports = function Task({
   requiredSurfaceQuality,
   amountOfAbrasion,
 }) {
-  this.id = id || uuidv1()
+  this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
   this.name = name || 'grinding'
-  this.amountOfWorkpieces = amountOfWorkpieces || 100
+  this.amountOfWorkpieces = amountOfWorkpieces || 10
   this.geometry = geometry
   this.materialProperties = materialProperties || {}
   this.requiredSurfaceQuality = requiredSurfaceQuality
@@ -71102,7 +70956,7 @@ module.exports = function Task({
   this.getStatus = () => this.status
 }
 
-},{"../../constants/message_type":12,"../../constants/task_status":13,"uuid/v1":4}],10:[function(require,module,exports){
+},{"../../constants/message_type":11,"../../constants/task_status":12,"uuid-v4":2}],8:[function(require,module,exports){
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
@@ -71140,7 +70994,7 @@ TaskAgent.prototype.receive = receiveMessage()
 
 module.exports = TaskAgent
 
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 const $ = require('jquery')
 const vis = require('vis')
 
@@ -71149,6 +71003,7 @@ const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
+const getRandomInt = require('./util')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -71209,13 +71064,6 @@ const machine3 = new MachineAgent('machine3', {
   status: 'active',
 })
 
-function init() {
-  console.log('init')
-  console.log('Machine 1 : ', machine1)
-  console.log('Machine 2 : ', machine2)
-  console.log('Machine 3 : ', machine3)
-}
-init()
 // function to startSession a single match between player1 and player2
 function startSession() {
   const testTask = new Task({
@@ -71227,8 +71075,26 @@ function startSession() {
     amountOfAbrasion: 10,
   })
 
-  // send task to market
-  taskAgent.sendTask('market', testTask)
+  function generateTasks() {
+    const geometries = ['A','B','C']
+
+    const task = new Task({
+      geometry: geometries[Math.floor(Math.random() * geometries.length)],
+      materialProperties: {
+        hardness: getRandomInt(3,7),
+      },
+      requiredSurfaceQuality: getRandomInt(1,4),
+      amountOfAbrasion: getRandomInt(4,8),
+    })
+
+    return task
+  }
+
+  for(var i = 0; i<5; i++) {
+    const newTask = generateTasks()
+    // send task to market
+    taskAgent.sendTask('market', newTask)
+  }
 }
 
 const startSessionBtn = $('#startSessionBtn')
@@ -71418,7 +71284,14 @@ machine3Nav.click(() => {
   machine3Page[0].classList.remove('d-none')
 })
 
-},{"../../agents/MachineAgent/MachineAgent":6,"../../agents/MachineAgent/Tool":7,"../../agents/MarketAgent/MarketAgent":8,"../../agents/TaskAgent/Task":9,"../../agents/TaskAgent/TaskAgent":10,"jquery":1,"vis":5}],12:[function(require,module,exports){
+},{"../../agents/MachineAgent/MachineAgent":4,"../../agents/MachineAgent/Tool":5,"../../agents/MarketAgent/MarketAgent":6,"../../agents/TaskAgent/Task":7,"../../agents/TaskAgent/TaskAgent":8,"./util":10,"jquery":1,"vis":3}],10:[function(require,module,exports){
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+module.exports = getRandomInt
+
+},{}],11:[function(require,module,exports){
 module.exports = {
   BID_ASKING: 'BID_ASKING',
   BID_OFFERING: 'BID_OFFERING',
@@ -71429,11 +71302,11 @@ module.exports = {
   TASK_REWARD: 'TASK_REWARD',
 }
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 module.exports = {
   PENDING: 'PENDING',
   PROCESSING: 'PROCESSING',
   DONE: 'DONE',
 }
 
-},{}]},{},[11]);
+},{}]},{},[9]);

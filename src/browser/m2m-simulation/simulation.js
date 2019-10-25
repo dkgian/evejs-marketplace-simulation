@@ -6,6 +6,7 @@ const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
+const getRandomInt = require('./util')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -77,8 +78,25 @@ function startSession() {
     amountOfAbrasion: 10,
   })
 
-  // send task to market
-  taskAgent.sendTask('market', testTask)
+  function generateTasks() {
+    const geometries = ['A','B','C']
+
+    const task = new Task({
+      geometry: geometries[Math.floor(Math.random() * geometries.length)],
+      materialProperties: {
+        hardness: getRandomInt(3,7),
+      },
+      requiredSurfaceQuality: getRandomInt(1,4),
+      amountOfAbrasion: getRandomInt(4,8),
+    })
+
+    return task
+  }
+
+  for(var i = 0; i<5; i++) {
+    const newTask = generateTasks()
+    taskAgent.sendTask('market', newTask)
+  }
 }
 
 const startSessionBtn = $('#startSessionBtn')

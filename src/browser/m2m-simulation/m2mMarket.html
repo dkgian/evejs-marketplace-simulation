@@ -21,6 +21,9 @@
 	<link href="https://unpkg.com/vis-network@latest/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
 	<style type="text/css" src></style>
 
+	<!-- Don't use this in production: -->
+	<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
 </head>
 <body>
 	<div>
@@ -35,13 +38,13 @@
 						<a id="overviewNav" class="nav-link">Market overview <span class="sr-only">(current)</span></a>
 					</li>
 					<li class="nav-item">
-						<a id="machine1Nav" class="nav-link">Machine 1</a>
+						<a id="machine1Nav" class="nav-link">Machines 1</a>
 					</li>
 					<li class="nav-item">
-						<a id="machine2Nav"class="nav-link">Machine 2</a>
+						<a id="machine2Nav"class="nav-link">Machines 2</a>
 					</li>
 					<li class="nav-item">
-						<a id="machine3Nav" class="nav-link">Machine 3</a>
+						<a id="machine3Nav" class="nav-link">Machines 3</a>
 					</li>
 				</ul>
 			</div>
@@ -49,73 +52,22 @@
 
 		<div class="container">
 			<div id="overviewPage" class="page overview row">
-				<div class="col-5">
+				<!--Overview-->
+				<div class="col-3">
 					<!--market network map-->
 					<div id="networkVis" class="my-1"></div>
-
-					<table class="table">
-						<thead>
-						<tr>
-							<th scope="col">Task</th>
-							<th scope="col">Price</th>
-							<th scope="col">By machine</th>
-						</tr>
-						</thead>
-						<tbody id="marketTableLog">
-						</tbody>
-					</table>
-
-					<button id="startSessionBtn">New session!</button>
+					<button id="startSessionBtn">Send task</button>
 				</div>
+
+				<section id="machines" class="col-9 row" data-machines="10"></section>
+
 			</div>
 
-			<div id="machine1Page" class="page machine1 row d-none">
-				<div class="col-5">
-					<div class="card">
-						<div class="card-header">
-							Information
-						</div>
-						<ul class="list-group list-group-flush">
-							<li class="list-group-item">Name: Machine 1 </li>
-							<li class="list-group-item">Capabilities: 'grinding', 'coating'</li>
-							<li id="machine1status" class="list-group-item">Current status: active</li>
-							<li id="machine1balance" class="list-group-item">Balance: 0</li>
-						</ul>
-					</div>
-				</div>
-			</div>
+			<div id="machine1Page" class="page machine1 row d-none"></div>
 
-			<div id="machine2Page" class="page machine2 row d-none">
-				<div class="col-5">
-					<div class="card">
-						<div class="card-header">
-							Information
-						</div>
-						<ul class="list-group list-group-flush">
-							<li class="list-group-item">Name: Machine 2 </li>
-							<li class="list-group-item">Capabilities: 'grinding', 'case-hardening'</li>
-							<li id="machine2status" class="list-group-item">Current status: active</li>
-							<li id="machine2balance" class="list-group-item">Balance: 0</li>
-						</ul>
-					</div>
-				</div>
-			</div>
+			<div id="machine2Page" class="page machine2 row d-none"></div>
 
-			<div id="machine3Page" class="page machine3 row d-none">
-				<div class="col-5">
-					<div class="card">
-						<div class="card-header">
-							Information
-						</div>
-						<ul class="list-group list-group-flush">
-							<li class="list-group-item">Name: Machine 3 </li>
-							<li class="list-group-item">Capabilities: 'coating', 'case-hardening'</li>
-							<li id="machine3status" class="list-group-item">Current status: active</li>
-							<li id="machine3balance" class="list-group-item">Balance: 0</li>
-						</ul>
-					</div>
-				</div>
-			</div>
+			<div id="machine3Page" class="page machine3 row d-none"></div>
 
 		</div>
 
@@ -128,5 +80,14 @@
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+	<!-- Load React. -->
+	<!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+	<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+	<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+
+	<!-- Load our React component. -->
+	<script src="../components/Machines.js" type="text/babel"></script>
 </body>
 </html>

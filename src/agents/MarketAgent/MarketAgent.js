@@ -76,9 +76,6 @@ function receiveMessage() {
         break
 
       case messageType.BID_OFFERING:
-        // eslint-disable-next-line no-case-declarations
-        const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
-
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
         const bestOffer = this.selectBestOffer()

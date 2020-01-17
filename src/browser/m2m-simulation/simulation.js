@@ -117,17 +117,17 @@ const nodes = new vis.DataSet([
   },
   {
     id: 1,
-    label: 'Machine 1',
-    title: 'Machine 1 is active',
+    label: 'Machines 1',
+    title: 'Machines 1 is active',
   },
   {
     id: 2,
-    label: 'Machine 2',
-    title: 'Machine 2 is running',
+    label: 'Machines 2',
+    title: 'Machines 2 is running',
   },
   {
     id: 3,
-    label: 'Machine 3',
+    label: 'Machines 3',
   },
 ])
 

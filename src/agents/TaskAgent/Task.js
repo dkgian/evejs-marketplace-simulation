@@ -8,7 +8,6 @@ module.exports = function Task({
   id,
   type,
   name,
-  amountOfWorkpieces,
   geometry,
   materialProperties,
   requiredSurfaceQuality,
@@ -17,7 +16,6 @@ module.exports = function Task({
   this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
   this.name = name || 'grinding'
-  this.amountOfWorkpieces = amountOfWorkpieces || 10
   this.geometry = geometry
   this.materialProperties = materialProperties || {}
   this.requiredSurfaceQuality = requiredSurfaceQuality

@@ -28,17 +28,18 @@ function placeABid() {
     const canDo = canDoGeometry && canDoHardness && canDoSurfaceQuality
 
     // #workpieces * c_power, c_power = 1
-    const cPower = 1
-    const powerPrice = task.amountOfWorkpieces * cPower
+    // const cPower = 1
+    // const powerPrice = task.amountOfWorkpieces * cPower
 
-    const cLubricant = 1
-    const lubricantPrice = task.amountOfWorkpieces * cLubricant
+    // const cLubricant = 1
+    // const lubricantPrice = task.amountOfWorkpieces * cLubricant
 
     const randomConstant = (Math.random() * 10).toFixed(3)
-    const offerPrice = powerPrice + lubricantPrice + Number(randomConstant)
+
+    const offerPrice = Number(randomConstant)
 
     const price = canDo ? offerPrice : null
-    const delaytime = Math.random() * 5000
+    const delaytime = Math.random() * 1000
 
     const bid = {
       ...task,

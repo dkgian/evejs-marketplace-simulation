@@ -17,33 +17,6 @@ function MachineAgent(id, props) {
   this.connect(eve.system.transports.getAll())
 }
 
-let machine1LogText = ''
-let machine2LogText = ''
-let machine3LogText = ''
-
-function logger(machine, text) {
-  const options = {
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  }
-  const now = new Date().toLocaleDateString('en-GB', options)
-
-  const machineLogID = `${machine}Log`
-  const machineLogText = `${now}: ${text}<br>`
-
-  if (machine === 'machine1') {
-    machine1LogText = machine1LogText.concat(machineLogText)
-    document.getElementById(machineLogID).innerHTML = machine1LogText
-  } else if (machine === 'machine2') {
-    machine2LogText = machine2LogText.concat(machineLogText)
-    document.getElementById(machineLogID).innerHTML = machine2LogText
-  } else if (machine === 'machine3') {
-    machine3LogText = machine3LogText.concat(machineLogText)
-    document.getElementById(machineLogID).innerHTML = machine3LogText
-  }
-}
-
 function placeABid() {
   return function (task) {
     const machine = this.props
@@ -74,12 +47,6 @@ function placeABid() {
       price,
     }
 
-    const placeBidLog = (price === null)
-      ? `${this.id} is not able to process this task`
-      : `${this.id} offers ${price} for ${task.amountOfWorkpieces} workpieces with geometry "${task.geometry}"`
-
-    logger(this.id, placeBidLog)
-
     setTimeout(() => {
       this.send('market', bid)
         .done()
@@ -90,9 +57,6 @@ function placeABid() {
 
 function processTask() {
   return function (task) {
-    const processingLog = `${this.id} is processing ${task.name}`
-    logger(this.id, processingLog)
-
     this.props.status = 'busy'
     const doneTask = {
       ...task,
@@ -104,9 +68,6 @@ function processTask() {
 
     setTimeout(() => {
       this.props.status = 'active'
-
-      const doneLog = `${this.id} is done with task ${task.name} and send back to marketplace.`
-      logger(this.id, doneLog)
 
       this.send('market', doneTask)
         .done()
@@ -125,8 +86,6 @@ function receiveMessage() {
 
       case messageType.TASK_ASSIGNING:
         console.log(`${this.id} get the task `, message)
-        logger(this.id, `${this.id} get the task ${message.name} ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces.`)
-
         setTimeout(() => {
           this.processTask(message)
         }, 3000)
@@ -138,11 +97,6 @@ function receiveMessage() {
           ...this.props,
           balance: this.props.balance + message.price,
         }
-
-        // update visual part
-        logger(this.id, `${this.id} get reward ${message.price} $ for task ${message.name} ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces`)
-        logger(this.id, `Balance is updated: ${this.props.balance} $`)
-        logger(this.id, '==== Transaction is done ====')
 
         document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
         document.getElementById(`${this.id}balance`).innerHTML = `Balance: ${this.props.balance}`

@@ -20,21 +20,6 @@ function MarketAgent(id, props) {
 
   // ... other initialization
 }
-let marketLogText = ''
-function marketLogger(text) {
-  const options = {
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  }
-  const now = new Date().toLocaleDateString('en-GB', options)
-
-  const newLogText = `${now}: ${text}<br>`
-
-  marketLogText = marketLogText.concat(newLogText)
-  document.getElementById('marketLog').innerHTML = marketLogText
-}
-
 
 function findBestOffer(arr) {
   const bidList = arr.filter(element => element.price !== null)
@@ -60,17 +45,6 @@ function selectBestOffer() {
   }
 }
 
-function updateLogTable(bidResult) {
-  const table = document.getElementById('marketTableLog')
-  const row = table.insertRow(0)
-  const cell1 = row.insertCell(0)
-  const cell2 = row.insertCell(1)
-  const cell3 = row.insertCell(2)
-  cell1.innerHTML = bidResult.name
-  cell2.innerHTML = bidResult.price
-  cell3.innerHTML = bidResult.machine
-}
-
 function assignTask() {
   return function (bestOffer) {
     if (bestOffer === undefined) {
@@ -83,11 +57,6 @@ function assignTask() {
     }
     this.props.transactionLog.push(bidResult)
 
-    updateLogTable(bidResult)
-    setTimeout(() => {
-      marketLogger(`${bestOffer.machine} is selected for task "${bestOffer.name}", "${bestOffer.amountOfWorkpieces}" workpieces, geometry "${bestOffer.geometry}" with offer ${bestOffer.price} $`)
-    }, 2000)
-
     return this.send(bestOffer.machine, bidResult)
       .done()
   }
@@ -99,12 +68,8 @@ function receiveMessage() {
     console.log(`${from} -> ${this.id} : `, message)
     switch (message.type) {
       case messageType.BID_ASKING:
-        // eslint-disable-next-line no-case-declarations
-        const task = message
         // change color when got new task msg
         this.props.status = 'received'
-        marketLogger(`${from}: Sent a new task "${task.name}", geometry "${task.geometry}", amount "${task.amountOfWorkpieces}"`)
-        marketLogger(`${this.id} is preparing for asking bid from machines...`)
         setTimeout(() => {
           this.openBidSession(['machine1', 'machine2', 'machine3'], message)
         }, 5000)
@@ -113,7 +78,6 @@ function receiveMessage() {
       case messageType.BID_OFFERING:
         // eslint-disable-next-line no-case-declarations
         const bidOfferLog = (message.price === null) ? `${from} can not process this task` : `${from}: offers ${message.price} for ${message.amountOfWorkpieces} geometry "${message.geometry}" workpieces`
-        marketLogger(bidOfferLog)
 
         bidOfferList.push(message)
         // eslint-disable-next-line no-case-declarations
@@ -132,10 +96,7 @@ function receiveMessage() {
           type: messageType.TASK_REWARD,
         }
 
-        marketLogger(`${from} has finished task "${message.name}" ${message.amountOfWorkpieces} geometry ${message.geometry} workpieces !`)
-
         this.transferRevenue(payForTask)
-        marketLogger(`===Transaction for task "${message.name}" is done!===`)
         break
       default:
         break
@@ -150,19 +111,10 @@ function openBidSession() {
   }
 }
 
-
 function transferRevenue() {
   return function (payForTask) {
-    const {
-      name,
-      price,
-      machine,
-      amountOfWorkpieces,
-      geometry,
-    } = payForTask
+    const { machine } = payForTask
 
-    marketLogger(`Paid ${price}$ to ${machine} for task ${name} ${amountOfWorkpieces} geometry ${geometry} workpieces.`)
-    // transfers production revenues once machines finished tasks successfully
     this.send(machine, payForTask)
   }
 }

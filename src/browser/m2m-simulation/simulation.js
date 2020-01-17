@@ -93,10 +93,8 @@ function startSession() {
     return task
   }
 
-  for(var i = 0; i<5; i++) {
-    const newTask = generateTasks()
-    taskAgent.sendTask('market', newTask)
-  }
+  const newTask = generateTasks()
+  taskAgent.sendTask('market', newTask)
 }
 
 const startSessionBtn = $('#startSessionBtn')

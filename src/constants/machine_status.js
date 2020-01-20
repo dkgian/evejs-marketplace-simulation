@@ -2,4 +2,6 @@ module.exports = {
   OFFLINE: 'OFFLINE',
   AVAILABLE: 'AVAILABLE',
   PROCESSING: 'PROCESSING',
+
+  WEAR_LEVEL_MAX: 2,
 }

@@ -1,5 +1,4 @@
 const Machines = function(props) {
-  console.log(props)
   return (
     <React.Fragment>
       <div id="machine1" className="col-4">
@@ -11,6 +10,8 @@ const Machines = function(props) {
             <li className="list-group-item">Capabilities: 'grinding', 'coating'</li>
             <li id="machine1status" className="list-group-item">Status: active</li>
             <li id="machine1balance" className="list-group-item">Balance: 0</li>
+            <li id="machine1wearOffLevel" className="list-group-item">Tool wear level: 0</li>
+            <li id="machine1toolingTimes" className="list-group-item">Tooling times: 0</li>
           </ul>
         </div>
       </div>
@@ -24,6 +25,8 @@ const Machines = function(props) {
             <li className="list-group-item">Capabilities: 'grinding', 'case-hardening'</li>
             <li id="machine2status" className="list-group-item">Status: active</li>
             <li id="machine2balance" className="list-group-item">Balance: 0</li>
+            <li id="machine2wearOffLevel" className="list-group-item">Tool wear level: 0</li>
+            <li id="machine2toolingTimes" className="list-group-item">Tooling times: 0</li>
           </ul>
         </div>
       </div>
@@ -37,6 +40,8 @@ const Machines = function(props) {
             <li className="list-group-item">Capabilities: 'coating', 'case-hardening'</li>
             <li id="machine3status" className="list-group-item">Status: active</li>
             <li id="machine3balance" className="list-group-item">Balance: 0</li>
+            <li id="machine3wearOffLevel" className="list-group-item">Tool wear level: 0</li>
+            <li id="machine3toolingTimes" className="list-group-item">Tooling times: 0</li>
           </ul>
         </div>
       </div>

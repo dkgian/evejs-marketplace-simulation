@@ -1,4 +1,4 @@
-var uuid = require('uuid-v4')
+const uuid = require('uuid-v4')
 
 const msgType = require('../../constants/message_type')
 const taskStatus = require('../../constants/task_status')
@@ -11,7 +11,6 @@ module.exports = function Task({
   geometry,
   materialProperties,
   requiredSurfaceQuality,
-  amountOfAbrasion,
 }) {
   this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
@@ -19,7 +18,6 @@ module.exports = function Task({
   this.geometry = geometry
   this.materialProperties = materialProperties || {}
   this.requiredSurfaceQuality = requiredSurfaceQuality
-  this.amountOfAbrasion = amountOfAbrasion
   this.status = taskStatus.PENDING
 
   this.setStatus = (status) => {

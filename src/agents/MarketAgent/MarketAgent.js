@@ -71,8 +71,8 @@ function receiveMessage() {
         // change color when got new task msg
         this.props.status = 'received'
         setTimeout(() => {
-          this.openBidSession(['machine1', 'machine2', 'machine3'], message)
-        }, 5000)
+          this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)
+        }, 2000)
         break
 
       case messageType.BID_OFFERING:
@@ -101,7 +101,7 @@ function receiveMessage() {
   }
 }
 
-function openBidSession() {
+function broadcastMessage() {
   return function (machines, task) {
     machines.map(machine => this.send(machine, task)
       .done())
@@ -121,7 +121,7 @@ MarketAgent.prototype = Object.create(eve.Agent.prototype)
 MarketAgent.prototype.constructor = MarketAgent
 
 MarketAgent.prototype.assignTask = assignTask()
-MarketAgent.prototype.openBidSession = openBidSession()
+MarketAgent.prototype.broadcastMessage = broadcastMessage()
 MarketAgent.prototype.transferRevenue = transferRevenue()
 MarketAgent.prototype.receive = receiveMessage()
 MarketAgent.prototype.selectBestOffer = selectBestOffer()

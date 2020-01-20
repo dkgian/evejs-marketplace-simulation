@@ -1,17 +1,17 @@
 const $ = require('jquery')
 const vis = require('vis')
+const _ = require('lodash')
 
 const Task = require('../../agents/TaskAgent/Task')
 const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
-const getRandomInt = require('./util')
+const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
 // init with eve config
-// Create agent
 eve.system.init({
   transports: [
     {
@@ -31,65 +31,50 @@ const market = new MarketAgent('market', {
 const machine1 = new MachineAgent('machine1', {
   balance: 10,
   geometries: ['A', 'B'],
-  operationalResources: [],
-  currentTool: new Tool({
-    name: 'toolA',
+  tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    harness: 10,
-    surfaceQuality: 5,
+    hardness: 7,
+    surfaceQuality: 7,
   }),
-  status: 'active',
+  status: AVAILABLE,
 })
 
 const machine2 = new MachineAgent('machine2', {
   balance: 10,
   geometries: ['B', 'C'],
-  operationalResources: [],
-  currentTool: new Tool({
-    name: 'toolB',
+  tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    harness: 6,
-    surfaceQuality: 4,
+    hardness: 6,
+    surfaceQuality: 6,
   }),
-  status: 'active',
+  status: AVAILABLE,
 })
 
 const machine3 = new MachineAgent('machine3', {
   balance: 10,
   geometries: ['A', 'C'],
-  operationalResources: [],
-  currentTool: new Tool({
-    name: 'toolA',
+  tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    harness: 5,
-    surfaceQuality: 10,
+    hardness: 5,
+    surfaceQuality: 5,
   }),
-  status: 'active',
+  status: AVAILABLE,
 })
 
-// function to startSession a single match between player1 and player2
+let taskId = 1
 function startSession() {
-  const testTask = new Task({
-    geometry: 'A',
-    materialProperties: {
-      hardness: 5,
-    },
-    requiredSurfaceQuality: 2,
-    amountOfAbrasion: 10,
-  })
-
   function generateTasks() {
-    const geometries = ['A','B','C']
+    const geometries = ['A', 'B', 'C']
 
     const task = new Task({
-      geometry: geometries[Math.floor(Math.random() * geometries.length)],
+      id: taskId,
+      geometry: geometries[_.random(0, 2)],
       materialProperties: {
-        hardness: getRandomInt(3,7),
+        hardness: _.random(3, 7),
       },
-      requiredSurfaceQuality: getRandomInt(1,4),
-      amountOfAbrasion: getRandomInt(4,8),
+      requiredSurfaceQuality: _.random(1, 4),
     })
-
+    taskId += 1
     return task
   }
 
@@ -148,8 +133,7 @@ const edges = new vis.DataSet([
 ])
 
 // create a network
-const container = document.getElementById('networkVis')
-const changeColorBtn = $('#changeColorBtn')
+const networkVisElement = document.getElementById('networkVis')
 
 const data = { nodes, edges }
 const options = {
@@ -174,7 +158,7 @@ const options = {
   physics: false,
 }
 // eslint-disable-next-line no-unused-vars
-const network = new vis.Network(container, data, options)
+const network = new vis.Network(networkVisElement, data, options)
 // event when click node/agent for switching tab
 network.on('click', (properties) => {
   const ids = properties.nodes
@@ -185,22 +169,20 @@ network.on('click', (properties) => {
 
 function updateNetwork() {
   function getNodeColorByStatus(status) {
-    const active = 'lime'
-    const busy = 'red'
-    const received = 'orange'
-    const listening = 'cyan'
-
-    if (status === 'active') {
-      return active
+    if (status === OFFLINE) {
+      return 'black'
+    }
+    if (status === AVAILABLE) {
+      return 'lime'
     }
     if (status === 'received') {
-      return received
+      return 'orange'
     }
-    if (status === 'busy') {
-      return busy
+    if (status === PROCESSING) {
+      return 'red'
     }
     if (status === 'listening') {
-      return listening
+      return 'cyan'
     }
 
     return undefined
@@ -233,27 +215,7 @@ function updateNetwork() {
   edges.update([])
 }
 
-// eslint-disable-next-line no-unused-vars
-function updateTransactionLogTable() {
-  const logTableBody = $('#logTable').find('tbody')
-  const { transactionLog } = market.props
-  console.log(transactionLog)
-
-  // eslint-disable-next-line array-callback-return
-  transactionLog.map((transaction) => {
-    logTableBody.append($('<tr>')
-      .append($('<td>')
-        .text(transaction.task.name))
-      .append($('<td>')
-        .text(transaction.price))
-      .append($('<td>')
-        .text(transaction.machine)))
-  })
-}
-
 setInterval(() => updateNetwork(), 500)
-changeColorBtn.click(() => updateNetwork())
-
 
 // Switch tab page
 const overviewNav = $('#overviewNav')

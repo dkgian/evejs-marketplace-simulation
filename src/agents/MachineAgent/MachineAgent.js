@@ -3,9 +3,11 @@
 // - the execution of certain production tasks
 
 // This is a template for extending the base eve Agent prototype
+const _ = require('lodash')
 // const eve = require('../../index')
 const messageType = require('../../constants/message_type')
 const taskStatus = require('../../constants/task_status')
+const { AVAILABLE, PROCESSING, OFFLINE } = require('../../constants/machine_status')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -19,13 +21,21 @@ function MachineAgent(id, props) {
 
 function placeABid() {
   return function (task) {
-    const machine = this.props
+    const {
+      status,
+      geometries,
+      tool: {
+        hardness,
+        surfaceQuality,
+      },
+    } = this.props
 
-    const canDoGeometry = machine.geometries.includes(task.geometry)
-    const canDoHardness = machine.currentTool.harness >= task.materialProperties.hardness
-    const canDoSurfaceQuality = machine.currentTool.surfaceQuality >= task.requiredSurfaceQuality
+    const isMachineOffline = status === OFFLINE
+    const canDoGeometry = geometries.includes(task.geometry)
+    const canDoHardness = hardness >= task.materialProperties.hardness
+    const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
 
-    const canDo = canDoGeometry && canDoHardness && canDoSurfaceQuality
+    const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
 
     // #workpieces * c_power, c_power = 1
     // const cPower = 1
@@ -34,31 +44,31 @@ function placeABid() {
     // const cLubricant = 1
     // const lubricantPrice = task.amountOfWorkpieces * cLubricant
 
-    const randomConstant = (Math.random() * 10).toFixed(3)
-
-    const offerPrice = Number(randomConstant)
+    const offerPrice = _.random(1, 10)
 
     const price = canDo ? offerPrice : null
-    const delaytime = Math.random() * 1000
+    const wearOffLevel = canDo ? _.random(1, 3) : null
 
-    const bid = {
+    const bidOffer = {
       ...task,
       type: messageType.BID_OFFERING,
       machine: this.id,
       price,
+      wearOffLevel,
     }
 
     setTimeout(() => {
-      this.send('market', bid)
-        .done()
-    }, delaytime)
+      this.send('market', bidOffer).done()
+    }, 2000)
   }
 }
 
 
 function processTask() {
   return function (task) {
-    this.props.status = 'busy'
+    this.props.status = PROCESSING
+    this.props.tool.wearOffLevel += task.wearOffLevel
+
     const doneTask = {
       ...task,
       type: messageType.TASK_DONE,
@@ -67,13 +77,14 @@ function processTask() {
 
     document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
 
-    setTimeout(() => {
-      this.props.status = 'active'
+    document.getElementById(`${this.id}wearOffLevel`).innerHTML = `Tool wear level: ${this.props.tool.wearOffLevel}`
 
+    setTimeout(() => {
+      this.props.status = AVAILABLE
       this.send('market', doneTask)
         .done()
       return null
-    }, 8000)
+    }, 2000)
   }
 }
 

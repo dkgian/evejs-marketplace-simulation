@@ -63,6 +63,9 @@ const machine3 = new MachineAgent('machine3', {
 
 let taskId = 1
 function startSession() {
+  const strategy = document.getElementById('strategy').value
+  console.log(strategy)
+
   function generateTasks() {
     const geometries = ['A', 'B', 'C']
 

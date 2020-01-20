@@ -3,5 +3,5 @@ module.exports = {
   AVAILABLE: 'AVAILABLE',
   PROCESSING: 'PROCESSING',
 
-  WEAR_LEVEL_MAX: 2,
+  WEAR_LEVEL_MAX: 5,
 }

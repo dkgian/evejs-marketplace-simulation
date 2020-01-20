@@ -20,6 +20,20 @@ function MachineAgent(id, props) {
   // connect to all transports provided by the system
   this.connect(eve.system.transports.getAll())
   this.updateWebUI()
+  this.checkMachineHealth()
+}
+
+function checkMachineHealth() {
+  setInterval(() => {
+    if (this.props.status === AVAILABLE && this.props.tool.wearOffLevel >= WEAR_LEVEL_MAX) {
+      this.props.status = OFFLINE
+      setTimeout(() => {
+        this.props.status = AVAILABLE
+        this.props.tool.wearOffLevel = 0
+        this.props.tool.toolingTimes += 1
+      }, 5000)
+    }
+  }, 1000)
 }
 
 function placeABid(task) {
@@ -115,9 +129,6 @@ function receiveMessage(from, message) {
       this.props = {
         ...this.props,
         balance: this.props.balance + message.price,
-        status: this.props.tool.wearOffLevel >= WEAR_LEVEL_MAX
-          ? this.runToolingProcess()
-          : AVAILABLE,
       }
 
       break
@@ -134,5 +145,6 @@ MachineAgent.prototype.placeABid = placeABid
 MachineAgent.prototype.processTask = processTask
 MachineAgent.prototype.runToolingProcess = runToolingProcess
 MachineAgent.prototype.updateWebUI = updateWebUI
+MachineAgent.prototype.checkMachineHealth = checkMachineHealth
 
 module.exports = MachineAgent

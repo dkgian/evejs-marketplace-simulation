@@ -30,3 +30,15 @@
 
 .bash {
 }
+
+.bg-available {
+  background-color: green;
+}
+
+.bg-processing {
+  background-color: red;
+}
+
+.bg-offline {
+  background-color: grey;
+}

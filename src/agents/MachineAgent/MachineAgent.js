@@ -97,16 +97,33 @@ function runToolingProcess() {
 }
 
 function updateWebUI() {
+  function getClassByStatus(status) {
+    switch (status) {
+      case AVAILABLE:
+        return 'bg-available'
+      case PROCESSING:
+        return 'bg-processing'
+      default:
+        return 'bg-offline'
+    }
+  }
+
   setInterval(() => {
     const StatusElm = document.getElementById(`${this.id}status`)
     const WearOffLevelElm = document.getElementById(`${this.id}wearOffLevel`)
     const BalanceElm = document.getElementById(`${this.id}balance`)
     const ToolingTimesElm = document.getElementById(`${this.id}toolingTimes`)
 
+    const InfoCard = document.getElementById(`${this.id}-card`)
+
     StatusElm.innerHTML = `Status: ${this.props.status}`
-    WearOffLevelElm.innerHTML = `Tool wear level: ${this.props.tool.wearOffLevel}`
+    WearOffLevelElm.innerHTML = `Tool wear level: <strong>${this.props.tool.wearOffLevel}</strong> over ${WEAR_LEVEL_MAX}`
     BalanceElm.innerHTML = `Balance: ${this.props.balance}`
     ToolingTimesElm.innerHTML = `Tooling times: ${this.props.tool.toolingTimes}`
+
+    const cardClass = getClassByStatus(this.props.status)
+    InfoCard.classList.remove('bg-available', 'bg-processing', 'bg-offline')
+    InfoCard.classList.add(cardClass)
   }, 1000)
 }
 

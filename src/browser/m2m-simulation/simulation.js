@@ -28,6 +28,10 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   strategy: '',
   status: LISTENING,
+  balance: {
+    moneyIn: {},
+    moneyOut: {},
+  },
 })
 
 const machine1 = new MachineAgent('machine1', {

@@ -47,7 +47,6 @@ const Machines = function(props) {
         <ul className="list-group list-group-flush">
           <li id="marketBalance" className="list-group-item">Balance: ---</li>
           <li id="marketToolingTimes" className="list-group-item">Tooling times: ---</li>
-          <li id="marketIdleTime" className="list-group-item">Idle time: ---</li>
         </ul>
       </div>
     </React.Fragment>

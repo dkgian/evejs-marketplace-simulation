@@ -114,10 +114,8 @@ function broadcastMessage(machines, task) {
   machines.map(machine => this.send(machine, task).done())
 }
 
-function transferRevenue(payForTask) {
-  const { machine } = payForTask
-
-  this.send(machine, payForTask)
+function transferRevenue(rewardData) {
+  this.send(rewardData.machine, rewardData)
 }
 
 

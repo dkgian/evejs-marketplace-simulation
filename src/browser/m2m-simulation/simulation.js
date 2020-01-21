@@ -7,6 +7,7 @@ const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
+const TaskQueue = require('../../agents/MachineAgent/TaskQueue')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
 const { LISTENING } = require('../../constants/marketplace_status')
 
@@ -43,6 +44,7 @@ const machine1 = new MachineAgent('machine1', {
     surfaceQuality: 7,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
 const machine2 = new MachineAgent('machine2', {
@@ -54,6 +56,7 @@ const machine2 = new MachineAgent('machine2', {
     surfaceQuality: 6,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
 const machine3 = new MachineAgent('machine3', {
@@ -65,6 +68,7 @@ const machine3 = new MachineAgent('machine3', {
     surfaceQuality: 5,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
 let taskId = 1

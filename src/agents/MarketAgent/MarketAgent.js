@@ -7,6 +7,7 @@
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
 const messageType = require('../../constants/message_type')
+const { RECEIVED, LISTENING } = require('../../constants/marketplace_status')
 
 let bidOfferList = []
 
@@ -62,8 +63,10 @@ function receiveMessage(from, message) {
   console.log(`${from} -> ${this.id} : `, message)
   switch (message.type) {
     case messageType.BID_ASKING:
-      // change color when got new task msg
-      this.props.status = 'received'
+      // set market agent props (status, strategy)
+      this.props.status = RECEIVED
+      this.props.strategy = message.strategy
+
       setTimeout(() => {
         this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)
       }, 2000)
@@ -74,7 +77,7 @@ function receiveMessage(from, message) {
       // eslint-disable-next-line no-case-declarations
       const bestOffer = this.selectBestOffer()
       // done asking, back to undefined
-      this.props.status = 'listening'
+      this.props.status = LISTENING
 
       this.assignTask(bestOffer)
       break

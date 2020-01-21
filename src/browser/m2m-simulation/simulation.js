@@ -8,6 +8,7 @@ const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
+const { LISTENING } = require('../../constants/marketplace_status')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -25,7 +26,8 @@ eve.system.init({
 const taskAgent = new TaskAgent('taskAgent')
 const market = new MarketAgent('market', {
   transactionLog: [],
-  status: 'listening',
+  strategy: '',
+  status: LISTENING,
 })
 
 const machine1 = new MachineAgent('machine1', {
@@ -64,7 +66,6 @@ const machine3 = new MachineAgent('machine3', {
 let taskId = 1
 function startSession() {
   const strategy = document.getElementById('strategy').value
-  console.log(strategy)
 
   function generateTasks() {
     const geometries = ['A', 'B', 'C']
@@ -76,6 +77,7 @@ function startSession() {
         hardness: _.random(3, 7),
       },
       requiredSurfaceQuality: _.random(1, 4),
+      strategy,
     })
     taskId += 1
     return task

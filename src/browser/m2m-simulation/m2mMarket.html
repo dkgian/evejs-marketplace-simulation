@@ -62,11 +62,11 @@
 
 					<div class="d-flex m-0" style="justify-content: space-between">
 						<form>
-							Select strategy:
+							<label for="strategy">Select strategy:</label>
 							<select id="strategy">
-								<option value="price">Best price offer</option>
-								<option value="time">With time constrains</option>
-								<option value="fair">Minimize idle machine</option>
+								<option value="strategy_price">Best price offer</option>
+								<option value="strategy_time">With time constrains</option>
+								<option value="strategy_fair">Minimize idle machine</option>
 							</select>
 						</form>
 
@@ -76,6 +76,31 @@
 				</div>
 
 				<section id="machines" class="col-9 row"></section>
+
+<!--				<section id="timeline" class="col-10 mt-2"></section>-->
+
+<!--				<script type="text/javascript">-->
+<!--          google.charts.load('current', {'packages':['timeline']});-->
+<!--          google.charts.setOnLoadCallback(drawChart);-->
+<!--          function drawChart() {-->
+<!--            var container = document.getElementById('timeline');-->
+<!--            var chart = new google.visualization.Timeline(container);-->
+<!--            var dataTable = new google.visualization.DataTable();-->
+
+<!--            dataTable.addColumn({ type: 'string', id: 'Machine' });-->
+<!--            dataTable.addColumn({ type: 'number', id: 'Start' });-->
+<!--            dataTable.addColumn({ type: 'number', id: 'End' });-->
+
+<!--            let timelineData = [-->
+<!--              [ 'Machine 1', 1, 2 ],-->
+<!--              [ 'Machine 2', 3, 4 ],-->
+<!--            ];-->
+
+<!--            dataTable.addRows(timelineData);-->
+
+<!--            chart.draw(dataTable);-->
+<!--          }-->
+<!--				</script>-->
 
 			</div>
 

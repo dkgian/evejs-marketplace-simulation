@@ -91,8 +91,10 @@ function startSession() {
     return task
   }
 
-  const newTask = generateTasks()
-  taskAgent.sendTask('market', newTask)
+  setInterval(() => {
+    const newTask = generateTasks()
+    taskAgent.sendTask('market', newTask)
+  }, 5000)
 }
 
 const startSessionBtn = $('#startSessionBtn')

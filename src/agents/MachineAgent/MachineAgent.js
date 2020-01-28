@@ -20,10 +20,11 @@ function MachineAgent(id, props) {
   // connect to all transports provided by the system
   this.connect(eve.system.transports.getAll())
   this.updateWebUI()
-  this.checkMachineHealth()
+  this.updateMachineState()
+  this.processTaskQueue()
 }
 
-function checkMachineHealth() {
+function updateMachineState() {
   setInterval(() => {
     if (this.props.status === AVAILABLE && this.props.tool.wearOffLevel >= WEAR_LEVEL_MAX) {
       this.props.status = OFFLINE
@@ -92,6 +93,22 @@ function processTask(task) {
   }, 2000)
 }
 
+function processTaskQueue() {
+  setInterval(() => {
+    const { taskQueue, status } = this.props
+
+    const isMachineAvailable = status === AVAILABLE
+    const hasTaskInQueue = !taskQueue.isEmpty()
+
+    if (isMachineAvailable && hasTaskInQueue) {
+      const nextTask = taskQueue.takeTask()
+      processTask.bind(this)(nextTask)
+    } else {
+      console.log(this.id, 'is IDLE')
+    }
+  }, 1000)
+}
+
 function runToolingProcess() {
   return OFFLINE
 }
@@ -113,13 +130,20 @@ function updateWebUI() {
     const WearOffLevelElm = document.getElementById(`${this.id}wearOffLevel`)
     const BalanceElm = document.getElementById(`${this.id}balance`)
     const ToolingTimesElm = document.getElementById(`${this.id}toolingTimes`)
+    const TaskQueueElm = document.getElementById(`${this.id}taskQueue`)
 
     const InfoCard = document.getElementById(`${this.id}-card`)
+
+    const tasks = this.props.taskQueue.items
+    const taskIds = tasks.length === 0
+      ? 'empty queue'
+      : tasks.map(task => task.id)
 
     StatusElm.innerHTML = `Status: ${this.props.status}`
     WearOffLevelElm.innerHTML = `Tool wear level: <strong>${this.props.tool.wearOffLevel}</strong> over ${WEAR_LEVEL_MAX}`
     BalanceElm.innerHTML = `Balance: ${this.props.balance}`
     ToolingTimesElm.innerHTML = `Tooling times: ${this.props.tool.toolingTimes}`
+    TaskQueueElm.innerHTML = `Task queue: ${_.truncate(taskIds)}`
 
     const cardClass = getClassByStatus(this.props.status)
     InfoCard.classList.remove('bg-available', 'bg-processing', 'bg-offline')
@@ -136,10 +160,8 @@ function receiveMessage(from, message) {
 
     case messageType.TASK_ASSIGNING:
       console.log(`${this.id} get the task `, message)
-      setTimeout(() => {
-        this.processTask(message)
-      }, 3000)
 
+      this.props.taskQueue.addTask(message)
       break
 
     case messageType.TASK_REWARD:
@@ -162,6 +184,7 @@ MachineAgent.prototype.placeABid = placeABid
 MachineAgent.prototype.processTask = processTask
 MachineAgent.prototype.runToolingProcess = runToolingProcess
 MachineAgent.prototype.updateWebUI = updateWebUI
-MachineAgent.prototype.checkMachineHealth = checkMachineHealth
+MachineAgent.prototype.updateMachineState = updateMachineState
+MachineAgent.prototype.processTaskQueue = processTaskQueue
 
 module.exports = MachineAgent

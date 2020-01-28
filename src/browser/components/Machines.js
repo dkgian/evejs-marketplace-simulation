@@ -1,4 +1,4 @@
-const Machines = function(props) {
+const Machines = function() {
   return (
     <React.Fragment>
       <div id="machine1-card" className="card">
@@ -11,6 +11,7 @@ const Machines = function(props) {
           <li id="machine1balance" className="list-group-item">Balance: --- </li>
           <li id="machine1wearOffLevel" className="list-group-item">Tool wear level: --- </li>
           <li id="machine1toolingTimes" className="list-group-item">Tooling times: --- </li>
+          <li id="machine1taskQueue" className="list-group-item">Task queue: --- </li>
         </ul>
       </div>
 
@@ -24,6 +25,7 @@ const Machines = function(props) {
           <li id="machine2balance" className="list-group-item">Balance: ---</li>
           <li id="machine2wearOffLevel" className="list-group-item">Tool wear level: ---</li>
           <li id="machine2toolingTimes" className="list-group-item">Tooling times: ---</li>
+          <li id="machine2taskQueue" className="list-group-item">Task queue: --- </li>
         </ul>
       </div>
 
@@ -37,6 +39,7 @@ const Machines = function(props) {
           <li id="machine3balance" className="list-group-item">Balance: ---</li>
           <li id="machine3wearOffLevel" className="list-group-item">Tool wear level: ---</li>
           <li id="machine3toolingTimes" className="list-group-item">Tooling times: ---</li>
+          <li id="machine3taskQueue" className="list-group-item">Task queue: --- </li>
         </ul>
       </div>
 

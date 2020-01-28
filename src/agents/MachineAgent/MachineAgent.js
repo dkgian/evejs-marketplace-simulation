@@ -26,7 +26,14 @@ function MachineAgent(id, props) {
 
 function updateMachineState() {
   setInterval(() => {
-    if (this.props.status === AVAILABLE && this.props.tool.wearOffLevel >= WEAR_LEVEL_MAX) {
+    const {
+      status,
+      tool: {
+        wearOffLevel,
+      },
+    } = this.props
+
+    if (status === AVAILABLE && wearOffLevel >= WEAR_LEVEL_MAX) {
       this.props.status = OFFLINE
       setTimeout(() => {
         this.props.status = AVAILABLE
@@ -77,8 +84,10 @@ function placeABid(task) {
 
 
 function processTask(task) {
+  const { timeToFinish, wearOffLevel } = task
+
   this.props.status = PROCESSING
-  this.props.tool.wearOffLevel += task.wearOffLevel
+  this.props.tool.wearOffLevel += wearOffLevel
 
   const doneTask = {
     ...task,
@@ -90,7 +99,7 @@ function processTask(task) {
     this.props.status = AVAILABLE
     this.send('market', doneTask).done()
     return null
-  }, 2000)
+  }, timeToFinish * 1000)
 }
 
 function processTaskQueue() {
@@ -104,7 +113,7 @@ function processTaskQueue() {
       const nextTask = taskQueue.takeTask()
       processTask.bind(this)(nextTask)
     } else {
-      console.log(this.id, 'is IDLE')
+      // TODO: do smt when machine is idle
     }
   }, 1000)
 }

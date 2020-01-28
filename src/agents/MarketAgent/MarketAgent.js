@@ -6,8 +6,15 @@
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
+const _ = require('lodash')
 const messageType = require('../../constants/message_type')
-const { RECEIVED, LISTENING } = require('../../constants/marketplace_status')
+const {
+  RECEIVED,
+  LISTENING,
+  STRATEGY_PRICE,
+  STRATEGY_TIME,
+  STRATEGY_FAIR,
+} = require('../../constants/marketplace_status')
 
 let bidOfferList = []
 
@@ -35,24 +42,36 @@ function updateWebUI() {
 }
 
 
-function findBestOffer(arr) {
-  const bidList = arr.filter(element => element.price !== null)
-  let bestOffer = bidList[0]
-  // eslint-disable-next-line no-plusplus
-  for (let i = 1; i < bidList.length; i++) {
-    const nextOffer = bidList[i]
-    const nextOfferPrice = nextOffer.price
-    bestOffer = (nextOfferPrice !== null && nextOfferPrice < bestOffer.price)
-      ? nextOffer : bestOffer
+function findBestOffer(offerArray) {
+  const { strategy } = this.props
+  let bestOffer
+
+  const bidList = offerArray.filter(element => element.price !== null)
+
+  switch (strategy) {
+    case STRATEGY_PRICE:
+      bestOffer = _.minBy(bidList, bid => bid.price)
+      break
+    case STRATEGY_TIME:
+      bestOffer = _.minBy(bidList, bid => bid.timeToFinish)
+      break
+    case STRATEGY_FAIR:
+      console.log('STRATEGY_FAIR')
+      break
+    default:
+      console.log('Unknown strategy')
+      break
   }
+
   bidOfferList = []
   return bestOffer
 }
 
-function selectBestOffer() {
+function collectAndSelectProposal() {
   const enoughBidOffer = (bidOfferList.length === 3)
   if (enoughBidOffer) {
-    return findBestOffer(bidOfferList)
+    const bestBid = findBestOffer.bind(this)(bidOfferList)
+    return bestBid
   }
   return undefined
 }
@@ -82,14 +101,14 @@ function receiveMessage(from, message) {
 
       setTimeout(() => {
         this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)
-      }, 2000)
+      }, 1000)
       break
 
     case messageType.BID_OFFERING:
       bidOfferList.push(message)
       // eslint-disable-next-line no-case-declarations
-      const bestOffer = this.selectBestOffer()
-      // done asking, back to undefined
+      const bestOffer = this.collectAndSelectProposal.bind(this)()
+      // done asking, back to listening status
       this.props.status = LISTENING
 
       this.assignTask(bestOffer)
@@ -126,7 +145,7 @@ MarketAgent.prototype.assignTask = assignTask
 MarketAgent.prototype.broadcastMessage = broadcastMessage
 MarketAgent.prototype.transferRevenue = transferRevenue
 MarketAgent.prototype.receive = receiveMessage
-MarketAgent.prototype.selectBestOffer = selectBestOffer
+MarketAgent.prototype.collectAndSelectProposal = collectAndSelectProposal
 MarketAgent.prototype.updateWebUI = updateWebUI
 
 module.exports = MarketAgent

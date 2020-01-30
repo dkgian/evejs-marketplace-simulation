@@ -11,7 +11,6 @@ module.exports = function Task({
   geometry,
   materialProperties,
   requiredSurfaceQuality,
-  strategy,
 }) {
   this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
@@ -20,5 +19,4 @@ module.exports = function Task({
   this.materialProperties = materialProperties || {}
   this.requiredSurfaceQuality = requiredSurfaceQuality
   this.status = taskStatus.PENDING
-  this.strategy = strategy
 }

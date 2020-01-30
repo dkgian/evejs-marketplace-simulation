@@ -26,8 +26,17 @@ class Queue {
     return this.items[this.items.length]
   }
 
+  clean() {
+    this.items = []
+  }
+
+  size() {
+    return this.items.length
+  }
+
   printQueue() {
     let string = ''
+    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < this.items.length; i++) {
       string += `${this.items.length[i]} `
     }

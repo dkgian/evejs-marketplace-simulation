@@ -71,34 +71,65 @@ const machine3 = new MachineAgent('machine3', {
   taskQueue: new TaskQueue(),
 })
 
+const startSessionBtn = $('#startSessionBtn')
+const generateTaskBtn = $('#generateTasksPool')
+
+
 let taskId = 1
-function startSession() {
-  const strategy = document.getElementById('strategy').value
+const taskPool = new TaskQueue()
 
-  function generateTasks() {
-    const geometries = ['A', 'B', 'C']
+function generateTask() {
+  const geometries = ['A', 'B', 'C']
 
-    const task = new Task({
-      id: taskId,
-      geometry: geometries[_.random(0, 2)],
-      materialProperties: {
-        hardness: _.random(3, 7),
-      },
-      requiredSurfaceQuality: _.random(1, 4),
-      strategy,
-    })
-    taskId += 1
-    return task
+  const task = new Task({
+    id: taskId,
+    geometry: geometries[_.random(0, 2)],
+    materialProperties: {
+      hardness: _.random(3, 7),
+    },
+    requiredSurfaceQuality: _.random(1, 4),
+  })
+  taskId += 1
+  return task
+}
+
+function sendTasks() {
+  const selectedStrategy = $('#strategy').val()
+  market.props.strategy = selectedStrategy
+
+  if (taskPool.isEmpty()) {
+    console.log('Task pool is empty')
+    return
   }
 
-  setInterval(() => {
-    const newTask = generateTasks()
+  // setInterval(() => {
+  //   const newTask = taskPool.takeTask()
+  //   // taskAgent.sendTask('market', newTask)
+  //   console.log(newTask)
+  // }, 1000)
+  const sendTaskInterval = setInterval(() => {
+    const newTask = taskPool.takeTask()
     taskAgent.sendTask('market', newTask)
+    if (taskPool.isEmpty()) {
+      clearInterval(sendTaskInterval)
+    }
   }, 2000)
 }
 
-const startSessionBtn = $('#startSessionBtn')
-startSessionBtn.click(() => startSession())
+function generateTaskPool(numberOfTasks) {
+  taskId = 1
+  taskPool.clean()
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < numberOfTasks; i++) {
+    const newTask = generateTask()
+    taskPool.addTask(newTask)
+  }
+  // generateTaskBtn.attr('disabled', true)
+  console.log(taskPool)
+}
+
+startSessionBtn.click(() => sendTasks())
+generateTaskBtn.click(() => generateTaskPool(10))
 
 // EVE AGENTS PART=====================END=========================
 

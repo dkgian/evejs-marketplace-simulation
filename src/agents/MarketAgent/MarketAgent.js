@@ -95,9 +95,8 @@ function receiveMessage(from, message) {
   console.log(`${from} -> ${this.id} : `, message)
   switch (message.type) {
     case messageType.BID_ASKING:
-      // set market agent props (status, strategy)
+      // set market agent props (status)
       this.props.status = RECEIVED
-      this.props.strategy = message.strategy
 
       setTimeout(() => {
         this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)

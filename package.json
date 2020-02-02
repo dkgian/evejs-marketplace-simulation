@@ -47,7 +47,8 @@
     "build": "gulp",
     "watch": "gulp watch",
     "watch-dev": "gulp watch-dev",
-    "test": "mocha test --recursive --reporter spec"
+    "test": "mocha test --recursive --reporter spec",
+    "bundle": "browserify ./src/browser/m2m-simulation/simulation.js > src/browser/m2m-simulation/simulation.bundle.js"
   },
   "main": "./index.js"
 }

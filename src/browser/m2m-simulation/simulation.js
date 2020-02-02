@@ -15,6 +15,10 @@ const {
   STRATEGY_TIME,
   STRATEGY_FAIR,
 } = require('../../constants/marketplace_status')
+const {
+  NUMBER_OF_TASK,
+  SEND_TASK_AFTER_DELAY,
+} = require('../../constants/config')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -91,7 +95,7 @@ const visualizeGraphBtn = $('#visualizeGraph')
 
 
 let taskId = 1
-const taskPool = new TaskQueue()
+let taskPool = []
 
 function generateTask() {
   const geometries = ['A', 'B', 'C']
@@ -110,30 +114,37 @@ function generateTask() {
 
 function sendTasks() {
   const selectedStrategy = $('#strategy').val()
+  console.log('TASK POOL: ', taskPool, ' Strategy: ', selectedStrategy)
   market.props.transactionLog = []
   market.props.strategy = selectedStrategy
 
-  if (taskPool.isEmpty()) {
+  if (taskPool.length === 0) {
     console.log('Task pool is empty')
     return
   }
 
-  const sendTaskInterval = setInterval(() => {
-    const newTask = taskPool.takeTask()
-    taskAgent.sendTask('market', newTask)
-    if (taskPool.isEmpty()) {
-      clearInterval(sendTaskInterval)
-    }
-  }, 2000)
+
+  let taskIndex = 0
+  function sendEachTasksAfterDelay() {
+    setTimeout(() => {
+      const newTask = taskPool[taskIndex]
+      taskAgent.sendTask('market', newTask)
+      taskIndex++
+      if (taskIndex < taskPool.length) {
+        sendEachTasksAfterDelay()
+      }
+    }, SEND_TASK_AFTER_DELAY * 1000)
+  }
+  sendEachTasksAfterDelay()
 }
 
 function generateTaskPool(numberOfTasks) {
   taskId = 1
-  taskPool.clean()
+  taskPool = []
   // eslint-disable-next-line no-plusplus
   for (let i = 0; i < numberOfTasks; i++) {
     const newTask = generateTask()
-    taskPool.addTask(newTask)
+    taskPool.push(newTask)
   }
   // generateTaskBtn.attr('disabled', true)
   console.log(taskPool)
@@ -173,7 +184,7 @@ function drawToolingTimesChart() {
 }
 
 startSessionBtn.click(() => sendTasks())
-generateTaskBtn.click(() => generateTaskPool(100))
+generateTaskBtn.click(() => generateTaskPool(NUMBER_OF_TASK))
 visualizeGraphBtn.click(() => drawToolingTimesChart())
 
 // EVE AGENTS PART=====================END=========================

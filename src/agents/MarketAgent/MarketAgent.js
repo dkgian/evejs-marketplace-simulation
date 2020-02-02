@@ -37,7 +37,7 @@ function updateWebUI() {
     const ToolingTimesElm = document.getElementById('marketToolingTimes')
 
     BalanceElm.innerHTML = `Balance: ${this.props.balance}`
-    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.toolingTimes}`
+    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.machines.toolingTimes}`
   }, 1000)
 }
 
@@ -85,7 +85,6 @@ function assignTask(bestOffer) {
     ...bestOffer,
     type: messageType.TASK_ASSIGNING,
   }
-  this.props.transactionLog.push(bidResult)
 
   return this.send(bestOffer.machine, bidResult).done()
 }
@@ -115,6 +114,18 @@ function receiveMessage(from, message) {
 
     case messageType.TASK_DONE:
       console.log('pay for ', from)
+      const {
+        transactionLog,
+        machines: {
+          toolingTimes,
+        },
+        toolingTimesData,
+        strategy,
+      } = this.props
+
+      transactionLog.push(message)
+      toolingTimesData[strategy].push([transactionLog.length, toolingTimes])
+
       // eslint-disable-next-line no-case-declarations
       const payForTask = {
         ...message,
@@ -122,6 +133,10 @@ function receiveMessage(from, message) {
       }
 
       this.transferRevenue(payForTask)
+      break
+
+    case messageType.MACHINE_TOOLING:
+      this.props.machines.toolingTimes += 1
       break
     default:
       break

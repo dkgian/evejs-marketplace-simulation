@@ -35,6 +35,8 @@ function updateMachineState() {
 
     if (status === AVAILABLE && wearOffLevel >= WEAR_LEVEL_MAX) {
       this.props.status = OFFLINE
+
+      this.send('market', { type: messageType.MACHINE_TOOLING }).done()
       setTimeout(() => {
         this.props.status = AVAILABLE
         this.props.tool.wearOffLevel = 0

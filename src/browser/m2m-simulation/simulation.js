@@ -9,7 +9,12 @@ const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
 const TaskQueue = require('../../agents/MachineAgent/TaskQueue')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
-const { LISTENING } = require('../../constants/marketplace_status')
+const {
+  LISTENING,
+  STRATEGY_PRICE,
+  STRATEGY_TIME,
+  STRATEGY_FAIR,
+} = require('../../constants/marketplace_status')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -29,6 +34,15 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   strategy: '',
   status: LISTENING,
+  toolingTimesData: {
+    [STRATEGY_PRICE]: [],
+    [STRATEGY_TIME]: [],
+    [STRATEGY_FAIR]: [],
+  },
+  machines: {
+    numberOfFinishTasks: 0,
+    toolingTimes: 0,
+  },
   balance: {
     moneyIn: {},
     moneyOut: {},
@@ -73,6 +87,7 @@ const machine3 = new MachineAgent('machine3', {
 
 const startSessionBtn = $('#startSessionBtn')
 const generateTaskBtn = $('#generateTasksPool')
+const visualizeGraphBtn = $('#visualizeGraph')
 
 
 let taskId = 1
@@ -95,6 +110,7 @@ function generateTask() {
 
 function sendTasks() {
   const selectedStrategy = $('#strategy').val()
+  market.props.transactionLog = []
   market.props.strategy = selectedStrategy
 
   if (taskPool.isEmpty()) {
@@ -102,11 +118,6 @@ function sendTasks() {
     return
   }
 
-  // setInterval(() => {
-  //   const newTask = taskPool.takeTask()
-  //   // taskAgent.sendTask('market', newTask)
-  //   console.log(newTask)
-  // }, 1000)
   const sendTaskInterval = setInterval(() => {
     const newTask = taskPool.takeTask()
     taskAgent.sendTask('market', newTask)
@@ -128,8 +139,42 @@ function generateTaskPool(numberOfTasks) {
   console.log(taskPool)
 }
 
+google.charts.load('current', { packages: ['line'] })
+
+google.charts.load('current', { packages: ['corechart', 'line'] })
+
+function drawToolingTimesChart() {
+  const data = new google.visualization.DataTable()
+  const {
+    toolingTimesData: {
+      strategy_price,
+    },
+  } = market.props
+
+  data.addColumn('number', 'X')
+  data.addColumn('number', 'Best price strategy')
+
+  data.addRows(strategy_price)
+
+  const options = {
+    hAxis: {
+      title: 'Number of tasks',
+    },
+    vAxis: {
+      title: 'Tooling times',
+    },
+    width: 1000,
+    height: 700,
+  }
+
+  const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))
+
+  chart.draw(data, options)
+}
+
 startSessionBtn.click(() => sendTasks())
-generateTaskBtn.click(() => generateTaskPool(10))
+generateTaskBtn.click(() => generateTaskPool(100))
+visualizeGraphBtn.click(() => drawToolingTimesChart())
 
 // EVE AGENTS PART=====================END=========================
 

@@ -112,11 +112,29 @@ function generateTask() {
   return task
 }
 
+function resetAgentToolingData() {
+  market.props.machines = {
+    numberOfFinishTasks: 0,
+    toolingTimes: 0,
+  }
+
+  machine1.props.tool.toolingTimes = 0
+  machine1.props.tool.wearOffLevel = 0
+
+  machine2.props.tool.toolingTimes = 0
+  machine2.props.tool.wearOffLevel = 0
+
+  machine3.props.tool.toolingTimes = 0
+  machine3.props.tool.wearOffLevel = 0
+}
+
 function sendTasks() {
   const selectedStrategy = $('#strategy').val()
   console.log('TASK POOL: ', taskPool, ' Strategy: ', selectedStrategy)
   market.props.transactionLog = []
   market.props.strategy = selectedStrategy
+
+  resetAgentToolingData()
 
   if (taskPool.length === 0) {
     console.log('Task pool is empty')
@@ -129,6 +147,7 @@ function sendTasks() {
     setTimeout(() => {
       const newTask = taskPool[taskIndex]
       taskAgent.sendTask('market', newTask)
+      // eslint-disable-next-line no-plusplus
       taskIndex++
       if (taskIndex < taskPool.length) {
         sendEachTasksAfterDelay()
@@ -159,13 +178,23 @@ function drawToolingTimesChart() {
   const {
     toolingTimesData: {
       strategy_price,
+      strategy_time,
+      strategy_fair,
     },
   } = market.props
 
   data.addColumn('number', 'X')
   data.addColumn('number', 'Best price strategy')
+  data.addColumn('number', 'Shortest time strategy')
 
-  data.addRows(strategy_price)
+  const combinedData = []
+  for (let i = 0; i < strategy_price.length; i++) {
+    const newRow = [i + 1, strategy_price[i], strategy_time[i]]
+    combinedData.push(newRow)
+  }
+
+  console.log(' >>>> ', combinedData)
+  data.addRows(combinedData)
 
   const options = {
     hAxis: {

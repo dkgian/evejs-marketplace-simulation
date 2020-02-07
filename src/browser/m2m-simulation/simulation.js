@@ -186,10 +186,11 @@ function drawToolingTimesChart() {
   data.addColumn('number', 'X')
   data.addColumn('number', 'Best price strategy')
   data.addColumn('number', 'Shortest time strategy')
+  data.addColumn('number', 'Lowest number of idle machine')
 
   const combinedData = []
   for (let i = 0; i < strategy_price.length; i++) {
-    const newRow = [i + 1, strategy_price[i], strategy_time[i]]
+    const newRow = [i + 1, strategy_price[i], strategy_time[i], strategy_fair[i]]
     combinedData.push(newRow)
   }
 
@@ -205,6 +206,7 @@ function drawToolingTimesChart() {
     },
     width: 1000,
     height: 700,
+    curveType: 'function',
   }
 
   const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))

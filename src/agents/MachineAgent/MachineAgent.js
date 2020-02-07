@@ -54,6 +54,7 @@ function placeABid(task) {
       hardness,
       surfaceQuality,
     },
+    taskQueue,
   } = this.props
 
   const isMachineOffline = status === OFFLINE
@@ -77,6 +78,7 @@ function placeABid(task) {
     price,
     timeToFinish,
     wearOffLevel,
+    taskQueueSize: taskQueue.size(),
   }
 
   setTimeout(() => {

@@ -56,7 +56,7 @@ function findBestOffer(offerArray) {
       bestOffer = _.minBy(bidList, bid => bid.timeToFinish)
       break
     case STRATEGY_FAIR:
-      console.log('STRATEGY_FAIR')
+      bestOffer = _.minBy(bidList, bid => bid.taskQueueSize)
       break
     default:
       console.log('Unknown strategy')

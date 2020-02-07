@@ -206,7 +206,8 @@ function drawToolingTimesChart() {
     },
     width: 1000,
     height: 700,
-    curveType: 'function',
+    // curveType: 'function',
+    colors: ['black', 'blue', 'red'],
   }
 
   const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))

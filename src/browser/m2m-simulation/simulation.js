@@ -194,7 +194,6 @@ function drawToolingTimesChart() {
     combinedData.push(newRow)
   }
 
-  console.log(' >>>> ', combinedData)
   data.addRows(combinedData)
 
   const options = {
@@ -207,7 +206,12 @@ function drawToolingTimesChart() {
     width: 1000,
     height: 700,
     // curveType: 'function',
-    colors: ['black', 'blue', 'red'],
+    colors: ['red', 'green', 'blue'],
+    series: {
+      0: { lineDashStyle: [0, 0] },
+      1: { lineDashStyle: [2, 2] },
+      2: { lineDashStyle: [20, 5] },
+    },
   }
 
   const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))

@@ -8,8 +8,9 @@ const _ = require('lodash')
 const messageType = require('../../constants/message_type')
 const taskStatus = require('../../constants/task_status')
 const {
-  AVAILABLE, PROCESSING, OFFLINE, WEAR_LEVEL_MAX,
+  AVAILABLE, PROCESSING, OFFLINE,
 } = require('../../constants/machine_status')
+const { WEAR_LEVEL_MAX } = require('../../constants/config')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -51,15 +52,21 @@ function placeABid(task) {
     status,
     geometries,
     tool: {
-      hardness,
+      hardness: toolHardness,
       surfaceQuality,
     },
     taskQueue,
   } = this.props
 
+  const {
+    materialProperties: {
+      hardness: materialHardness,
+    },
+  } = task
+
   const isMachineOffline = status === OFFLINE
   const canDoGeometry = geometries.includes(task.geometry)
-  const canDoHardness = hardness >= task.materialProperties.hardness
+  const canDoHardness = toolHardness >= materialHardness
   const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
 
   const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
@@ -69,7 +76,7 @@ function placeABid(task) {
 
   const price = canDo ? offerPrice : null
   const timeToFinish = canDo ? _.random(1, 5) : null
-  const wearOffLevel = canDo ? _.random(1, 3) : null
+  const wearOffLevel = !canDo ? null : 1 / ((toolHardness - materialHardness) + 1)
 
   const bidOffer = {
     ...task,

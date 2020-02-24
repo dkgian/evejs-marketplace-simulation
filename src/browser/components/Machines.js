@@ -39,16 +39,6 @@ const Machines = function() {
           <li id="machine3taskQueue" className="list-group-item">Task queue: --- </li>
         </ul>
       </div>
-
-      <div id="summary-card" className="card flex-fill">
-        <div className="card-header">
-          <h5>Summary</h5>
-        </div>
-        <ul className="list-group list-group-flush">
-          <li id="marketBalance" className="list-group-item">Balance: ---</li>
-          <li id="marketToolingTimes" className="list-group-item">Tooling times: ---</li>
-        </ul>
-      </div>
     </React.Fragment>
   )
 }

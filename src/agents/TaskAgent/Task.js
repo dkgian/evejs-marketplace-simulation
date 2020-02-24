@@ -9,14 +9,14 @@ module.exports = function Task({
   type,
   name,
   geometry,
-  materialProperties,
+  hardness,
   requiredSurfaceQuality,
 }) {
   this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
   this.name = name || 'grinding'
   this.geometry = geometry
-  this.materialProperties = materialProperties || {}
+  this.hardness = hardness
   this.requiredSurfaceQuality = requiredSurfaceQuality
   this.status = taskStatus.PENDING
 }

@@ -87691,7 +87691,10 @@ const _ = require('lodash')
 // const eve = require('../../index')
 const messageType = require('../../constants/message_type')
 const taskStatus = require('../../constants/task_status')
-const { AVAILABLE, PROCESSING, OFFLINE } = require('../../constants/machine_status')
+const {
+  AVAILABLE, PROCESSING, OFFLINE,
+} = require('../../constants/machine_status')
+const { WEAR_LEVEL_MAX } = require('../../constants/config')
 
 function MachineAgent(id, props) {
   /* eslint-disable no-undef */
@@ -87701,121 +87704,243 @@ function MachineAgent(id, props) {
 
   // connect to all transports provided by the system
   this.connect(eve.system.transports.getAll())
+  this.updateWebUI()
+  this.updateMachineState()
+  this.processTaskQueue()
 }
 
-function placeABid() {
-  return function (task) {
+function updateMachineState() {
+  setInterval(() => {
     const {
       status,
-      geometries,
       tool: {
-        hardness,
-        surfaceQuality,
+        wearOffLevel,
       },
     } = this.props
 
-    const isMachineOffline = status === OFFLINE
-    const canDoGeometry = geometries.includes(task.geometry)
-    const canDoHardness = hardness >= task.materialProperties.hardness
-    const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
+    if (status === AVAILABLE && wearOffLevel >= WEAR_LEVEL_MAX) {
+      this.props.status = OFFLINE
 
-    const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
-
-    // #workpieces * c_power, c_power = 1
-    // const cPower = 1
-    // const powerPrice = task.amountOfWorkpieces * cPower
-
-    // const cLubricant = 1
-    // const lubricantPrice = task.amountOfWorkpieces * cLubricant
-
-    const offerPrice = _.random(1, 10)
-
-    const price = canDo ? offerPrice : null
-    const timeToFinish = canDo ? _.random(1, 5) : null
-    const wearOffLevel = canDo ? _.random(1, 3) : null
-
-    const bidOffer = {
-      ...task,
-      type: messageType.BID_OFFERING,
-      machine: this.id,
-      price,
-      timeToFinish,
-      wearOffLevel,
+      this.send('market', { type: messageType.MACHINE_TOOLING }).done()
+      setTimeout(() => {
+        this.props.status = AVAILABLE
+        this.props.tool.wearOffLevel = 0
+        this.props.tool.toolingTimes += 1
+      }, 5000)
     }
+  }, 1000)
+}
 
-    setTimeout(() => {
-      this.send('market', bidOffer).done()
-    }, 2000)
+function placeABid(task) {
+  const {
+    status,
+    geometries,
+    tool: {
+      hardness: toolHardness,
+      surfaceQuality,
+    },
+    taskQueue,
+  } = this.props
+
+  const {
+    hardness: materialHardness,
+  } = task
+
+  const isMachineOffline = status === OFFLINE
+  const canDoGeometry = geometries.includes(task.geometry)
+  const canDoHardness = toolHardness >= materialHardness
+  const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
+
+  const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
+
+  // #workpieces * c_power, c_power = 1
+  const offerPrice = _.random(1, 10)
+
+  const price = canDo ? offerPrice : null
+  const timeToFinish = canDo ? _.random(1, 5) : null
+  const wearOffLevel = !canDo ? null : 1 / ((toolHardness - materialHardness) + 1)
+
+  const bidOffer = {
+    ...task,
+    type: messageType.BID_OFFERING,
+    machine: this.id,
+    price,
+    timeToFinish,
+    wearOffLevel,
+    taskQueueSize: taskQueue.size(),
   }
+
+  setTimeout(() => {
+    this.send('market', bidOffer).done()
+  }, 2000)
 }
 
 
-function processTask() {
-  return function (task) {
-    this.props.status = PROCESSING
-    this.props.tool.wearOffLevel += task.wearOffLevel
+function processTask(task) {
+  const { timeToFinish, wearOffLevel } = task
 
-    const doneTask = {
-      ...task,
-      type: messageType.TASK_DONE,
-      status: taskStatus.DONE,
-    }
+  this.props.status = PROCESSING
+  this.props.tool.wearOffLevel += wearOffLevel
 
-    document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
-
-    document.getElementById(`${this.id}wearOffLevel`).innerHTML = `Tool wear level: ${this.props.tool.wearOffLevel}`
-
-    setTimeout(() => {
-      this.props.status = AVAILABLE
-      this.send('market', doneTask)
-        .done()
-      return null
-    }, 2000)
+  const doneTask = {
+    ...task,
+    type: messageType.TASK_DONE,
+    status: taskStatus.DONE,
   }
+
+  setTimeout(() => {
+    this.props.status = AVAILABLE
+    this.send('market', doneTask).done()
+    return null
+  }, timeToFinish * 1000)
 }
 
-function receiveMessage() {
-  return function (from, message) {
-    // ... handle incoming messages
-    switch (message.type) {
-      case messageType.BID_ASKING:
-        this.placeABid(message)
-        break
+function processTaskQueue() {
+  setInterval(() => {
+    const { taskQueue, status } = this.props
 
-      case messageType.TASK_ASSIGNING:
-        console.log(`${this.id} get the task `, message)
-        setTimeout(() => {
-          this.processTask(message)
-        }, 3000)
+    const isMachineAvailable = status === AVAILABLE
+    const hasTaskInQueue = !taskQueue.isEmpty()
 
-        break
+    if (isMachineAvailable && hasTaskInQueue) {
+      const nextTask = taskQueue.takeTask()
+      processTask.bind(this)(nextTask)
+    } else {
+      // TODO: do smt when machine is idle
+    }
+  }, 1000)
+}
 
-      case messageType.TASK_REWARD:
-        this.props = {
-          ...this.props,
-          balance: this.props.balance + message.price,
-        }
+function runToolingProcess() {
+  return OFFLINE
+}
 
-        document.getElementById(`${this.id}status`).innerHTML = `Status: ${this.props.status}`
-        document.getElementById(`${this.id}balance`).innerHTML = `Balance: ${this.props.balance}`
-
-        break
+function updateWebUI() {
+  function getClassByStatus(status) {
+    switch (status) {
+      case AVAILABLE:
+        return 'bg-available'
+      case PROCESSING:
+        return 'bg-processing'
       default:
-        console.log(message)
+        return 'bg-offline'
     }
+  }
+
+  setInterval(() => {
+    const StatusElm = document.getElementById(`${this.id}status`)
+    const WearOffLevelElm = document.getElementById(`${this.id}wearOffLevel`)
+    const BalanceElm = document.getElementById(`${this.id}balance`)
+    const ToolingTimesElm = document.getElementById(`${this.id}toolingTimes`)
+    const TaskQueueElm = document.getElementById(`${this.id}taskQueue`)
+
+    const InfoCard = document.getElementById(`${this.id}-card`)
+
+    const tasks = this.props.taskQueue.items
+    const taskIds = tasks.length === 0
+      ? 'empty queue'
+      : tasks.map(task => task.id)
+
+    StatusElm.innerHTML = `Status: ${this.props.status}`
+    WearOffLevelElm.innerHTML = `Tool wear level: <strong>${_.truncate(this.props.tool.wearOffLevel)}</strong> over ${WEAR_LEVEL_MAX}`
+    BalanceElm.innerHTML = `Balance: ${this.props.balance}`
+    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.tool.toolingTimes}`
+    TaskQueueElm.innerHTML = `Task queue: ${_.truncate(taskIds)}`
+
+    const cardClass = getClassByStatus(this.props.status)
+    InfoCard.classList.remove('bg-available', 'bg-processing', 'bg-offline')
+    InfoCard.classList.add(cardClass)
+  }, 1000)
+}
+
+function receiveMessage(from, message) {
+  // ... handle incoming messages
+  switch (message.type) {
+    case messageType.BID_ASKING:
+      this.placeABid(message)
+      break
+
+    case messageType.TASK_ASSIGNING:
+      console.log(`${this.id} get the task `, message)
+
+      this.props.taskQueue.addTask(message)
+      break
+
+    case messageType.TASK_REWARD:
+      this.props = {
+        ...this.props,
+        balance: this.props.balance + message.price,
+      }
+
+      break
+    default:
+      console.log(message)
   }
 }
 
 MachineAgent.prototype = Object.create(eve.Agent.prototype)
 MachineAgent.prototype.constructor = MachineAgent
 
-MachineAgent.prototype.receive = receiveMessage()
-MachineAgent.prototype.placeABid = placeABid()
-MachineAgent.prototype.processTask = processTask()
+MachineAgent.prototype.receive = receiveMessage
+MachineAgent.prototype.placeABid = placeABid
+MachineAgent.prototype.processTask = processTask
+MachineAgent.prototype.runToolingProcess = runToolingProcess
+MachineAgent.prototype.updateWebUI = updateWebUI
+MachineAgent.prototype.updateMachineState = updateMachineState
+MachineAgent.prototype.processTaskQueue = processTaskQueue
 
 module.exports = MachineAgent
 
-},{"../../constants/machine_status":11,"../../constants/message_type":12,"../../constants/task_status":13,"lodash":2}],6:[function(require,module,exports){
+},{"../../constants/config":12,"../../constants/machine_status":13,"../../constants/message_type":15,"../../constants/task_status":16,"lodash":2}],6:[function(require,module,exports){
+class Queue {
+  constructor() {
+    this.items = []
+  }
+
+  isEmpty() {
+    return this.items.length === 0
+  }
+
+  addTask(task) {
+    this.items.push(task)
+  }
+
+  takeTask() {
+    if (this.isEmpty()) {
+      return null
+    }
+    return this.items.shift()
+  }
+
+  head() {
+    return this.items[0]
+  }
+
+  tail() {
+    return this.items[this.items.length]
+  }
+
+  clean() {
+    this.items = []
+  }
+
+  size() {
+    return this.items.length
+  }
+
+  printQueue() {
+    let string = ''
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < this.items.length; i++) {
+      string += `${this.items.length[i]} `
+    }
+    return string
+  }
+}
+
+module.exports = Queue
+
+},{}],7:[function(require,module,exports){
 module.exports = function Tool({
   forMaterials, hardness, surfaceQuality,
 }) {
@@ -87826,7 +87951,7 @@ module.exports = function Tool({
   this.toolingTimes = 0
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // The market place is simulated by an agent that
 // - asks for bids for certain production tasks
 // - selects best bids
@@ -87835,7 +87960,15 @@ module.exports = function Tool({
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
+const _ = require('lodash')
 const messageType = require('../../constants/message_type')
+const {
+  RECEIVED,
+  LISTENING,
+  STRATEGY_PRICE,
+  STRATEGY_TIME,
+  STRATEGY_FAIR,
+} = require('../../constants/marketplace_status')
 
 let bidOfferList = []
 
@@ -87848,116 +87981,146 @@ function MarketAgent(id, props) {
   this.connect(eve.system.transports.getAll())
 
   // ... other initialization
+  this.updateWebUI()
 }
 
-function findBestOffer(arr) {
-  const bidList = arr.filter(element => element.price !== null)
-  let bestOffer = bidList[0]
-  // eslint-disable-next-line no-plusplus
-  for (let i = 1; i < bidList.length; i++) {
-    const nextOffer = bidList[i]
-    const nextOfferPrice = nextOffer.price
-    bestOffer = (nextOfferPrice !== null && nextOfferPrice < bestOffer.price)
-      ? nextOffer : bestOffer
+
+function updateWebUI() {
+  setInterval(() => {
+    const BalanceElm = document.getElementById('marketBalance')
+    const ToolingTimesElm = document.getElementById('marketToolingTimes')
+
+    BalanceElm.innerHTML = `Balance: ${this.props.balance}`
+    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.machines.toolingTimes}`
+  }, 1000)
+}
+
+
+function findBestOffer(offerArray) {
+  const { strategy } = this.props
+  let bestOffer
+
+  const bidList = offerArray.filter(element => element.price !== null)
+
+  switch (strategy) {
+    case STRATEGY_PRICE:
+      bestOffer = _.minBy(bidList, bid => bid.price)
+      break
+    case STRATEGY_TIME:
+      bestOffer = _.minBy(bidList, bid => bid.timeToFinish)
+      break
+    case STRATEGY_FAIR:
+      bestOffer = _.minBy(bidList, bid => bid.taskQueueSize)
+      break
+    default:
+      console.log('Unknown strategy')
+      break
   }
+
   bidOfferList = []
   return bestOffer
 }
 
-function selectBestOffer() {
-  return function () {
-    const enoughBidOffer = (bidOfferList.length === 3)
-    if (enoughBidOffer) {
-      return findBestOffer(bidOfferList)
-    }
+function collectAndSelectProposal() {
+  const enoughBidOffer = (bidOfferList.length === 3)
+  if (enoughBidOffer) {
+    const bestBid = findBestOffer.bind(this)(bidOfferList)
+    return bestBid
+  }
+  return undefined
+}
+
+function assignTask(bestOffer) {
+  if (bestOffer === undefined) {
     return undefined
   }
+
+  const bidResult = {
+    ...bestOffer,
+    type: messageType.TASK_ASSIGNING,
+  }
+
+  return this.send(bestOffer.machine, bidResult).done()
 }
 
-function assignTask() {
-  return function (bestOffer) {
-    if (bestOffer === undefined) {
-      return undefined
-    }
+function receiveMessage(from, message) {
+  // ... handle incoming messages
+  console.log(`${from} -> ${this.id} : `, message)
+  switch (message.type) {
+    case messageType.BID_ASKING:
+      // set market agent props (status)
+      this.props.status = RECEIVED
 
-    const bidResult = {
-      ...bestOffer,
-      type: messageType.TASK_ASSIGNING,
-    }
-    this.props.transactionLog.push(bidResult)
+      setTimeout(() => {
+        this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)
+      }, 1000)
+      break
 
-    return this.send(bestOffer.machine, bidResult)
-      .done()
+    case messageType.BID_OFFERING:
+      bidOfferList.push(message)
+      // eslint-disable-next-line no-case-declarations
+      const bestOffer = this.collectAndSelectProposal.bind(this)()
+      // done asking, back to listening status
+      this.props.status = LISTENING
+
+      this.assignTask(bestOffer)
+      break
+
+    case messageType.TASK_DONE:
+      console.log('pay for ', from)
+      const {
+        transactionLog,
+        machines: {
+          toolingTimes,
+        },
+        toolingTimesData,
+        strategy,
+      } = this.props
+
+      transactionLog.push(message)
+
+      // const dataRow = [transactionLog.length, toolingTimes]
+      toolingTimesData[strategy].push(toolingTimes)
+
+      // eslint-disable-next-line no-case-declarations
+      const payForTask = {
+        ...message,
+        type: messageType.TASK_REWARD,
+      }
+
+      this.transferRevenue(payForTask)
+      break
+
+    case messageType.MACHINE_TOOLING:
+      this.props.machines.toolingTimes += 1
+      break
+    default:
+      break
   }
 }
 
-function receiveMessage() {
-  return function (from, message) {
-    // ... handle incoming messages
-    console.log(`${from} -> ${this.id} : `, message)
-    switch (message.type) {
-      case messageType.BID_ASKING:
-        // change color when got new task msg
-        this.props.status = 'received'
-        setTimeout(() => {
-          this.broadcastMessage(['machine1', 'machine2', 'machine3'], message)
-        }, 2000)
-        break
-
-      case messageType.BID_OFFERING:
-        bidOfferList.push(message)
-        // eslint-disable-next-line no-case-declarations
-        const bestOffer = this.selectBestOffer()
-        // done asking, back to undefined
-        this.props.status = 'listening'
-
-        this.assignTask(bestOffer)
-        break
-
-      case messageType.TASK_DONE:
-        console.log('pay for ', from)
-        // eslint-disable-next-line no-case-declarations
-        const payForTask = {
-          ...message,
-          type: messageType.TASK_REWARD,
-        }
-
-        this.transferRevenue(payForTask)
-        break
-      default:
-        break
-    }
-  }
+function broadcastMessage(machines, task) {
+  machines.map(machine => this.send(machine, task).done())
 }
 
-function broadcastMessage() {
-  return function (machines, task) {
-    machines.map(machine => this.send(machine, task)
-      .done())
-  }
-}
-
-function transferRevenue() {
-  return function (payForTask) {
-    const { machine } = payForTask
-
-    this.send(machine, payForTask)
-  }
+function transferRevenue(rewardData) {
+  this.send(rewardData.machine, rewardData)
 }
 
 
 MarketAgent.prototype = Object.create(eve.Agent.prototype)
 MarketAgent.prototype.constructor = MarketAgent
 
-MarketAgent.prototype.assignTask = assignTask()
-MarketAgent.prototype.broadcastMessage = broadcastMessage()
-MarketAgent.prototype.transferRevenue = transferRevenue()
-MarketAgent.prototype.receive = receiveMessage()
-MarketAgent.prototype.selectBestOffer = selectBestOffer()
+MarketAgent.prototype.assignTask = assignTask
+MarketAgent.prototype.broadcastMessage = broadcastMessage
+MarketAgent.prototype.transferRevenue = transferRevenue
+MarketAgent.prototype.receive = receiveMessage
+MarketAgent.prototype.collectAndSelectProposal = collectAndSelectProposal
+MarketAgent.prototype.updateWebUI = updateWebUI
 
 module.exports = MarketAgent
 
-},{"../../constants/message_type":12}],8:[function(require,module,exports){
+},{"../../constants/marketplace_status":14,"../../constants/message_type":15,"lodash":2}],9:[function(require,module,exports){
 const uuid = require('uuid-v4')
 
 const msgType = require('../../constants/message_type')
@@ -87969,24 +88132,19 @@ module.exports = function Task({
   type,
   name,
   geometry,
-  materialProperties,
+  hardness,
   requiredSurfaceQuality,
 }) {
   this.id = id || uuid()
   this.type = type || msgType.BID_ASKING
   this.name = name || 'grinding'
   this.geometry = geometry
-  this.materialProperties = materialProperties || {}
+  this.hardness = hardness
   this.requiredSurfaceQuality = requiredSurfaceQuality
   this.status = taskStatus.PENDING
-
-  this.setStatus = (status) => {
-    this.status = status
-  }
-  this.getStatus = () => this.status
 }
 
-},{"../../constants/message_type":12,"../../constants/task_status":13,"uuid-v4":3}],9:[function(require,module,exports){
+},{"../../constants/message_type":15,"../../constants/task_status":16,"uuid-v4":3}],10:[function(require,module,exports){
 
 // This is a template for extending the base eve Agent prototype
 // const eve = require('../../index')
@@ -88024,7 +88182,7 @@ TaskAgent.prototype.receive = receiveMessage()
 
 module.exports = TaskAgent
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 const $ = require('jquery')
 const vis = require('vis')
 const _ = require('lodash')
@@ -88034,7 +88192,18 @@ const TaskAgent = require('../../agents/TaskAgent/TaskAgent')
 const MarketAgent = require('../../agents/MarketAgent/MarketAgent')
 const MachineAgent = require('../../agents/MachineAgent/MachineAgent')
 const Tool = require('../../agents/MachineAgent/Tool')
+const TaskQueue = require('../../agents/MachineAgent/TaskQueue')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
+const {
+  LISTENING,
+  STRATEGY_PRICE,
+  STRATEGY_TIME,
+  STRATEGY_FAIR,
+} = require('../../constants/marketplace_status')
+const {
+  NUMBER_OF_TASK,
+  SEND_TASK_AFTER_DELAY,
+} = require('../../constants/config')
 
 // EVE AGENTS PART=====================START================================
 /* eslint-disable no-undef */
@@ -88052,7 +88221,21 @@ eve.system.init({
 const taskAgent = new TaskAgent('taskAgent')
 const market = new MarketAgent('market', {
   transactionLog: [],
-  status: 'listening',
+  strategy: '',
+  status: LISTENING,
+  toolingTimesData: {
+    [STRATEGY_PRICE]: [],
+    [STRATEGY_TIME]: [],
+    [STRATEGY_FAIR]: [],
+  },
+  machines: {
+    numberOfFinishTasks: 0,
+    toolingTimes: 0,
+  },
+  balance: {
+    moneyIn: {},
+    moneyOut: {},
+  },
 })
 
 const machine1 = new MachineAgent('machine1', {
@@ -88064,6 +88247,7 @@ const machine1 = new MachineAgent('machine1', {
     surfaceQuality: 7,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
 const machine2 = new MachineAgent('machine2', {
@@ -88075,6 +88259,7 @@ const machine2 = new MachineAgent('machine2', {
     surfaceQuality: 6,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
 const machine3 = new MachineAgent('machine3', {
@@ -88086,31 +88271,140 @@ const machine3 = new MachineAgent('machine3', {
     surfaceQuality: 5,
   }),
   status: AVAILABLE,
+  taskQueue: new TaskQueue(),
 })
 
+const startSessionBtn = $('#startSessionBtn')
+const generateTaskBtn = $('#generateTasksPool')
+const visualizeGraphBtn = $('#visualizeGraph')
+
+
 let taskId = 1
-function startSession() {
-  function generateTasks() {
-    const geometries = ['A', 'B', 'C']
+let taskPool = []
 
-    const task = new Task({
-      id: taskId,
-      geometry: geometries[_.random(0, 2)],
-      materialProperties: {
-        hardness: _.random(3, 7),
-      },
-      requiredSurfaceQuality: _.random(1, 4),
-    })
-    taskId += 1
-    return task
-  }
+function generateTask() {
+  const geometries = ['A', 'B', 'C']
 
-  const newTask = generateTasks()
-  taskAgent.sendTask('market', newTask)
+  const task = new Task({
+    id: taskId,
+    geometry: geometries[_.random(0, 2)],
+    hardness: _.random(3, 7),
+    requiredSurfaceQuality: _.random(1, 4),
+  })
+  taskId += 1
+  return task
 }
 
-const startSessionBtn = $('#startSessionBtn')
-startSessionBtn.click(() => startSession())
+function resetAgentToolingData() {
+  market.props.machines = {
+    numberOfFinishTasks: 0,
+    toolingTimes: 0,
+  }
+
+  machine1.props.tool.toolingTimes = 0
+  machine1.props.tool.wearOffLevel = 0
+
+  machine2.props.tool.toolingTimes = 0
+  machine2.props.tool.wearOffLevel = 0
+
+  machine3.props.tool.toolingTimes = 0
+  machine3.props.tool.wearOffLevel = 0
+}
+
+function sendTasks() {
+  const selectedStrategy = $('#strategy').val()
+  console.log('TASK POOL: ', taskPool, ' Strategy: ', selectedStrategy)
+  market.props.transactionLog = []
+  market.props.strategy = selectedStrategy
+
+  resetAgentToolingData()
+
+  if (taskPool.length === 0) {
+    console.log('Task pool is empty')
+    return
+  }
+
+
+  let taskIndex = 0
+  function sendEachTasksAfterDelay() {
+    setTimeout(() => {
+      const newTask = taskPool[taskIndex]
+      taskAgent.sendTask('market', newTask)
+      // eslint-disable-next-line no-plusplus
+      taskIndex++
+      if (taskIndex < taskPool.length) {
+        sendEachTasksAfterDelay()
+      }
+    }, SEND_TASK_AFTER_DELAY * 1000)
+  }
+  sendEachTasksAfterDelay()
+}
+
+function generateTaskPool(numberOfTasks) {
+  taskId = 1
+  taskPool = []
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < numberOfTasks; i++) {
+    const newTask = generateTask()
+    taskPool.push(newTask)
+  }
+  // generateTaskBtn.attr('disabled', true)
+  console.log(taskPool)
+}
+
+google.charts.load('current', { packages: ['line'] })
+
+google.charts.load('current', { packages: ['corechart', 'line'] })
+
+function drawToolingTimesChart() {
+  const data = new google.visualization.DataTable()
+  const {
+    toolingTimesData: {
+      strategy_price,
+      strategy_time,
+      strategy_fair,
+    },
+  } = market.props
+
+  data.addColumn('number', 'X')
+  data.addColumn('number', 'Best price strategy')
+  data.addColumn('number', 'Shortest time strategy')
+  data.addColumn('number', 'Lowest number of idle machine')
+
+  const combinedData = []
+  for (let i = 0; i < strategy_price.length; i++) {
+    const newRow = [i + 1, strategy_price[i], strategy_time[i], strategy_fair[i]]
+    combinedData.push(newRow)
+  }
+
+  data.addRows(combinedData)
+
+  const options = {
+    hAxis: {
+      title: 'Number of tasks',
+    },
+    vAxis: {
+      title: 'Tooling times',
+    },
+    width: 1000,
+    height: 700,
+    // curveType: 'function',
+    colors: ['red', 'green', 'blue'],
+    series: {
+      0: { lineDashStyle: [0, 0] },
+      1: { lineDashStyle: [2, 2] },
+      2: { lineDashStyle: [20, 5] },
+    },
+  }
+
+  const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))
+
+  chart.draw(data, options)
+}
+
+startSessionBtn.click(() => sendTasks())
+generateTaskBtn.click(() => generateTaskPool(NUMBER_OF_TASK))
+visualizeGraphBtn.click(() => drawToolingTimesChart())
 
 // EVE AGENTS PART=====================END=========================
 
@@ -88273,29 +88567,48 @@ machine3Nav.click(() => {
   machine3Page[0].classList.remove('d-none')
 })
 
-},{"../../agents/MachineAgent/MachineAgent":5,"../../agents/MachineAgent/Tool":6,"../../agents/MarketAgent/MarketAgent":7,"../../agents/TaskAgent/Task":8,"../../agents/TaskAgent/TaskAgent":9,"../../constants/machine_status":11,"jquery":1,"lodash":2,"vis":4}],11:[function(require,module,exports){
+},{"../../agents/MachineAgent/MachineAgent":5,"../../agents/MachineAgent/TaskQueue":6,"../../agents/MachineAgent/Tool":7,"../../agents/MarketAgent/MarketAgent":8,"../../agents/TaskAgent/Task":9,"../../agents/TaskAgent/TaskAgent":10,"../../constants/config":12,"../../constants/machine_status":13,"../../constants/marketplace_status":14,"jquery":1,"lodash":2,"vis":4}],12:[function(require,module,exports){
+module.exports = {
+  NUMBER_OF_TASK: 5,
+  WEAR_LEVEL_MAX: 1.5,
+  SEND_TASK_AFTER_DELAY: 2,
+}
+
+},{}],13:[function(require,module,exports){
 module.exports = {
   OFFLINE: 'OFFLINE',
   AVAILABLE: 'AVAILABLE',
   PROCESSING: 'PROCESSING',
 }
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
+module.exports = {
+  LISTENING: 'listening',
+  RECEIVED: 'received',
+
+  STRATEGY_PRICE: 'strategy_price',
+  STRATEGY_TIME: 'strategy_time',
+  STRATEGY_FAIR: 'strategy_fair',
+}
+
+},{}],15:[function(require,module,exports){
 module.exports = {
   BID_ASKING: 'BID_ASKING',
   BID_OFFERING: 'BID_OFFERING',
   BID_RESULT: 'BID_RESULT',
+  HEALTH: 'HEALTH',
 
   TASK_DONE: 'TASK_DONE',
   TASK_ASSIGNING: 'TASK_ASSIGNING',
   TASK_REWARD: 'TASK_REWARD',
+  MACHINE_TOOLING: 'MACHINE_TOOLING',
 }
 
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = {
   PENDING: 'PENDING',
   PROCESSING: 'PROCESSING',
   DONE: 'DONE',
 }
 
-},{}]},{},[10]);
+},{}]},{},[11]);

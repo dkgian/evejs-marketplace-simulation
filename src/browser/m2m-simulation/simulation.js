@@ -103,9 +103,7 @@ function generateTask() {
   const task = new Task({
     id: taskId,
     geometry: geometries[_.random(0, 2)],
-    materialProperties: {
-      hardness: _.random(3, 7),
-    },
+    hardness: _.random(3, 7),
     requiredSurfaceQuality: _.random(1, 4),
   })
   taskId += 1

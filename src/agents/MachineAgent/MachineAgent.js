@@ -59,9 +59,7 @@ function placeABid(task) {
   } = this.props
 
   const {
-    materialProperties: {
-      hardness: materialHardness,
-    },
+    hardness: materialHardness,
   } = task
 
   const isMachineOffline = status === OFFLINE
@@ -160,7 +158,7 @@ function updateWebUI() {
       : tasks.map(task => task.id)
 
     StatusElm.innerHTML = `Status: ${this.props.status}`
-    WearOffLevelElm.innerHTML = `Tool wear level: <strong>${this.props.tool.wearOffLevel}</strong> over ${WEAR_LEVEL_MAX}`
+    WearOffLevelElm.innerHTML = `Tool wear level: <strong>${_.truncate(this.props.tool.wearOffLevel)}</strong> over ${WEAR_LEVEL_MAX}`
     BalanceElm.innerHTML = `Balance: ${this.props.balance}`
     ToolingTimesElm.innerHTML = `Tooling times: ${this.props.tool.toolingTimes}`
     TaskQueueElm.innerHTML = `Task queue: ${_.truncate(taskIds)}`

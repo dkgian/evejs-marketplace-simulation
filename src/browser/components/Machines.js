@@ -14,7 +14,7 @@ const Machines = function() {
         </ul>
       </div>
 
-      <div  id="machine2-card" className="card">
+      <div id="machine2-card" className="card">
         <div className="card-header">
           <h5>Machine 2</h5>
         </div>
@@ -27,7 +27,7 @@ const Machines = function() {
         </ul>
       </div>
 
-      <div  id="machine3-card" className="card">
+      <div id="machine3-card" className="card">
         <div className="card-header">
           <h5>Machine 3</h5>
         </div>

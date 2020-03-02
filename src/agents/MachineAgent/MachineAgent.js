@@ -60,20 +60,22 @@ function placeABid(task) {
 
   const {
     hardness: materialHardness,
+    geometry,
+    requiredSurfaceQuality,
   } = task
 
   const isMachineOffline = status === OFFLINE
-  const canDoGeometry = geometries.includes(task.geometry)
+  const canDoGeometry = geometries.includes(geometry)
   const canDoHardness = toolHardness >= materialHardness
-  const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
+  const canDoSurfaceQuality = surfaceQuality >= requiredSurfaceQuality
 
   const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
 
   // #workpieces * c_power, c_power = 1
-  const offerPrice = _.random(1, 10)
+  const offerPrice = _.random(1, 5)
 
-  const price = canDo ? offerPrice : null
-  const timeToFinish = canDo ? _.random(1, 5) : null
+  const price = !canDo ? null : offerPrice
+  const timeToFinish = !canDo ? null : surfaceQuality - requiredSurfaceQuality
   const wearOffLevel = !canDo ? null : 1 / ((toolHardness - materialHardness) + 1)
 
   const bidOffer = {

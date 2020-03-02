@@ -27,20 +27,7 @@ function MarketAgent(id, props) {
   this.connect(eve.system.transports.getAll())
 
   // ... other initialization
-  this.updateWebUI()
 }
-
-
-function updateWebUI() {
-  setInterval(() => {
-    const BalanceElm = document.getElementById('marketBalance')
-    const ToolingTimesElm = document.getElementById('marketToolingTimes')
-
-    BalanceElm.innerHTML = `Balance: ${this.props.balance}`
-    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.machines.toolingTimes}`
-  }, 1000)
-}
-
 
 function findBestOffer(offerArray) {
   const { strategy } = this.props
@@ -162,6 +149,5 @@ MarketAgent.prototype.broadcastMessage = broadcastMessage
 MarketAgent.prototype.transferRevenue = transferRevenue
 MarketAgent.prototype.receive = receiveMessage
 MarketAgent.prototype.collectAndSelectProposal = collectAndSelectProposal
-MarketAgent.prototype.updateWebUI = updateWebUI
 
 module.exports = MarketAgent

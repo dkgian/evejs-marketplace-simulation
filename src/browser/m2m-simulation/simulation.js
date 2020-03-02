@@ -58,7 +58,7 @@ const machine1 = new MachineAgent('machine1', {
   geometries: ['A', 'B'],
   tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    hardness: 7,
+    hardness: _.random(4, 7),
     surfaceQuality: 7,
   }),
   status: AVAILABLE,
@@ -70,7 +70,7 @@ const machine2 = new MachineAgent('machine2', {
   geometries: ['B', 'C'],
   tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    hardness: 6,
+    hardness: _.random(4, 7),
     surfaceQuality: 6,
   }),
   status: AVAILABLE,
@@ -82,7 +82,7 @@ const machine3 = new MachineAgent('machine3', {
   geometries: ['A', 'C'],
   tool: new Tool({
     forMaterials: ['materialA, materialB'],
-    hardness: 5,
+    hardness: _.random(4, 7),
     surfaceQuality: 5,
   }),
   status: AVAILABLE,
@@ -103,7 +103,7 @@ function generateTask() {
   const task = new Task({
     id: taskId,
     geometry: geometries[_.random(0, 2)],
-    hardness: _.random(3, 7),
+    hardness: _.random(2, 5),
     requiredSurfaceQuality: _.random(1, 4),
   })
   taskId += 1

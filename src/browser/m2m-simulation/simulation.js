@@ -38,11 +38,7 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   strategy: '',
   status: LISTENING,
-  toolingTimesData: {
-    [STRATEGY_PRICE]: [],
-    [STRATEGY_TIME]: [],
-    [STRATEGY_FAIR]: [],
-  },
+  toolingTimesData: [],
   machines: {
     numberOfFinishTasks: 0,
     toolingTimes: 0,
@@ -63,6 +59,7 @@ const machine1 = new MachineAgent('machine1', {
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const machine2 = new MachineAgent('machine2', {
@@ -75,6 +72,7 @@ const machine2 = new MachineAgent('machine2', {
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const machine3 = new MachineAgent('machine3', {
@@ -87,11 +85,13 @@ const machine3 = new MachineAgent('machine3', {
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const startSessionBtn = $('#startSessionBtn')
 const generateTaskBtn = $('#generateTasksPool')
 const visualizeGraphBtn = $('#visualizeGraph')
+const dataTextArea = $('#txtData')
 
 
 let taskId = 1
@@ -171,55 +171,23 @@ google.charts.load('current', { packages: ['line'] })
 
 google.charts.load('current', { packages: ['corechart', 'line'] })
 
-function drawToolingTimesChart() {
-  const data = new google.visualization.DataTable()
+
+function convertArrayToColData(array) {
+  return array.toString().replace(/,/g, '\n')
+}
+
+function getDataToTextarea() {
+  console.log('Get data')
   const {
-    toolingTimesData: {
-      strategy_price,
-      strategy_time,
-      strategy_fair,
-    },
+    toolingTimesData,
   } = market.props
 
-  data.addColumn('number', 'X')
-  data.addColumn('number', 'Best price strategy')
-  data.addColumn('number', 'Shortest time strategy')
-  data.addColumn('number', 'Lowest number of idle machine')
-
-  const combinedData = []
-  for (let i = 0; i < strategy_price.length; i++) {
-    const newRow = [i + 1, strategy_price[i], strategy_time[i], strategy_fair[i]]
-    combinedData.push(newRow)
-  }
-
-  data.addRows(combinedData)
-
-  const options = {
-    hAxis: {
-      title: 'Number of tasks',
-    },
-    vAxis: {
-      title: 'Tooling times',
-    },
-    width: 1000,
-    height: 700,
-    // curveType: 'function',
-    colors: ['red', 'green', 'blue'],
-    series: {
-      0: { lineDashStyle: [0, 0] },
-      1: { lineDashStyle: [2, 2] },
-      2: { lineDashStyle: [20, 5] },
-    },
-  }
-
-  const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))
-
-  chart.draw(data, options)
+  dataTextArea.text(convertArrayToColData(toolingTimesData))
 }
 
 startSessionBtn.click(() => sendTasks())
 generateTaskBtn.click(() => generateTaskPool(NUMBER_OF_TASK))
-visualizeGraphBtn.click(() => drawToolingTimesChart())
+visualizeGraphBtn.click(() => getDataToTextarea())
 
 // EVE AGENTS PART=====================END=========================
 

@@ -107,13 +107,12 @@ function receiveMessage(from, message) {
           toolingTimes,
         },
         toolingTimesData,
-        strategy,
       } = this.props
 
       transactionLog.push(message)
 
       // const dataRow = [transactionLog.length, toolingTimes]
-      toolingTimesData[strategy].push(toolingTimes)
+      toolingTimesData.push(toolingTimes)
 
       // eslint-disable-next-line no-case-declarations
       const payForTask = {

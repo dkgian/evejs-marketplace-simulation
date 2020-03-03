@@ -34,15 +34,17 @@ function updateMachineState() {
       },
     } = this.props
 
-    if (status === AVAILABLE && wearOffLevel >= WEAR_LEVEL_MAX) {
-      this.props.status = OFFLINE
+    if (status === AVAILABLE) {
+      if (wearOffLevel >= WEAR_LEVEL_MAX) {
+        this.props.status = OFFLINE
 
-      this.send('market', { type: messageType.MACHINE_TOOLING }).done()
-      setTimeout(() => {
-        this.props.status = AVAILABLE
-        this.props.tool.wearOffLevel = 0
-        this.props.tool.toolingTimes += 1
-      }, 5000)
+        this.send('market', { type: messageType.MACHINE_TOOLING }).done()
+        setTimeout(() => {
+          this.props.status = AVAILABLE
+          this.props.tool.wearOffLevel = 0
+          this.props.tool.toolingTimes += 1
+        }, 5000)
+      }
     }
   }, 1000)
 }

@@ -11,9 +11,6 @@ const TaskQueue = require('../../agents/MachineAgent/TaskQueue')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
 const {
   LISTENING,
-  STRATEGY_PRICE,
-  STRATEGY_TIME,
-  STRATEGY_FAIR,
 } = require('../../constants/marketplace_status')
 const {
   NUMBER_OF_TASK,
@@ -39,6 +36,7 @@ const market = new MarketAgent('market', {
   strategy: '',
   status: LISTENING,
   toolingTimesData: [],
+  queuedTasksData: [],
   machines: {
     numberOfFinishTasks: 0,
     toolingTimes: 0,
@@ -177,12 +175,10 @@ function convertArrayToColData(array) {
 }
 
 function getDataToTextarea() {
-  console.log('Get data')
   const {
-    toolingTimesData,
+    queuedTasksData,
   } = market.props
-
-  dataTextArea.text(convertArrayToColData(toolingTimesData))
+  dataTextArea.text(convertArrayToColData(queuedTasksData))
 }
 
 startSessionBtn.click(() => sendTasks())

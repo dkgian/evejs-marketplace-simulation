@@ -34,6 +34,10 @@ function updateMachineState() {
       },
     } = this.props
 
+    if (status !== PROCESSING ) {
+      this.props.idleTime += 1
+    }
+
     if (status === AVAILABLE) {
       if (wearOffLevel >= WEAR_LEVEL_MAX) {
         this.props.status = OFFLINE
@@ -98,12 +102,14 @@ function placeABid(task) {
 
 function processTask(task) {
   const { timeToFinish, wearOffLevel } = task
+  const { idleTime } = this.props
 
   this.props.status = PROCESSING
   this.props.tool.wearOffLevel += wearOffLevel
 
   const doneTask = {
     ...task,
+    idleTime,
     type: messageType.TASK_DONE,
     status: taskStatus.DONE,
   }

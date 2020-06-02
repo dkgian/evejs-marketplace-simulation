@@ -101,22 +101,28 @@ function receiveMessage(from, message) {
 
     case messageType.TASK_DONE:
       console.log('pay for ', from)
+
       const {
-        transactionLog,
         machines: {
           toolingTimes,
         },
         toolingTimesData,
         queuedTasksData,
+        idleTimeData,
+        totalIdleTime,
       } = this.props
 
       const {
         taskQueueSize,
+        idleTime: machineIdleTime,
       } = message
 
+      this.props.totalIdleTime += machineIdleTime
       // const dataRow = [transactionLog.length, toolingTimes]
       toolingTimesData.push(toolingTimes)
       queuedTasksData.push(taskQueueSize)
+      this.props.idleTimeData.push(totalIdleTime)
+      console.log('>>>', idleTimeData)
 
       // eslint-disable-next-line no-case-declarations
       const payForTask = {

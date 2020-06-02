@@ -37,13 +37,11 @@ const market = new MarketAgent('market', {
   status: LISTENING,
   toolingTimesData: [],
   queuedTasksData: [],
+  idleTimeData: [],
+  totalIdleTime: 0,
   machines: {
     numberOfFinishTasks: 0,
     toolingTimes: 0,
-  },
-  balance: {
-    moneyIn: {},
-    moneyOut: {},
   },
 })
 
@@ -51,9 +49,8 @@ const machine1 = new MachineAgent('machine1', {
   balance: 10,
   geometries: ['A', 'B'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
     hardness: _.random(4, 7),
-    surfaceQuality: 7,
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
@@ -64,9 +61,8 @@ const machine2 = new MachineAgent('machine2', {
   balance: 10,
   geometries: ['B', 'C'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
     hardness: _.random(4, 7),
-    surfaceQuality: 6,
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
@@ -77,9 +73,8 @@ const machine3 = new MachineAgent('machine3', {
   balance: 10,
   geometries: ['A', 'C'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
     hardness: _.random(4, 7),
-    surfaceQuality: 5,
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
@@ -101,8 +96,8 @@ function generateTask() {
   const task = new Task({
     id: taskId,
     geometry: geometries[_.random(0, 2)],
-    hardness: _.random(2, 5),
-    requiredSurfaceQuality: _.random(1, 4),
+    hardness: _.random(2, 4),
+    requiredSurfaceQuality: _.random(1, 3),
   })
   taskId += 1
   return task
@@ -124,12 +119,24 @@ function resetAgentToolingData() {
   machine3.props.tool.wearOffLevel = 0
 }
 
-function sendTasks() {
+function resetMarketProperties() {
   const selectedStrategy = $('#strategy').val()
-  console.log('TASK POOL: ', taskPool, ' Strategy: ', selectedStrategy)
   market.props.transactionLog = []
   market.props.strategy = selectedStrategy
+  market.props.toolingTimesData = []
+  market.props.idleTimeData = []
+  market.props.totalIdleTime = 0
+}
 
+function resetMachineProperties() {
+  machine1.props.idleTime = 0
+  machine2.props.idleTime = 0
+  machine3.props.idleTime = 0
+}
+
+function sendTasks() {
+  resetMarketProperties()
+  resetMachineProperties()
   resetAgentToolingData()
 
   if (taskPool.length === 0) {
@@ -176,9 +183,11 @@ function convertArrayToColData(array) {
 
 function getDataToTextarea() {
   const {
-    queuedTasksData,
+    // queuedTasksData,
+    toolingTimesData,
+    // idleTimeData,
   } = market.props
-  dataTextArea.text(convertArrayToColData(queuedTasksData))
+  dataTextArea.text(convertArrayToColData(toolingTimesData))
 }
 
 startSessionBtn.click(() => sendTasks())

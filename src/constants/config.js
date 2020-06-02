@@ -1,5 +1,5 @@
 module.exports = {
-  NUMBER_OF_TASK: 110,
+  NUMBER_OF_TASK: 100,
   WEAR_LEVEL_MAX: 1.5,
   SEND_TASK_AFTER_DELAY: 1,
 }

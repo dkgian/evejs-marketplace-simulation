@@ -87718,15 +87718,21 @@ function updateMachineState() {
       },
     } = this.props
 
-    if (status === AVAILABLE && wearOffLevel >= WEAR_LEVEL_MAX) {
-      this.props.status = OFFLINE
+    if (status !== PROCESSING ) {
+      this.props.idleTime += 1
+    }
 
-      this.send('market', { type: messageType.MACHINE_TOOLING }).done()
-      setTimeout(() => {
-        this.props.status = AVAILABLE
-        this.props.tool.wearOffLevel = 0
-        this.props.tool.toolingTimes += 1
-      }, 5000)
+    if (status === AVAILABLE) {
+      if (wearOffLevel >= WEAR_LEVEL_MAX) {
+        this.props.status = OFFLINE
+
+        this.send('market', { type: messageType.MACHINE_TOOLING }).done()
+        setTimeout(() => {
+          this.props.status = AVAILABLE
+          this.props.tool.wearOffLevel = 0
+          this.props.tool.toolingTimes += 1
+        }, 5000)
+      }
     }
   }, 1000)
 }
@@ -87744,20 +87750,22 @@ function placeABid(task) {
 
   const {
     hardness: materialHardness,
+    geometry,
+    requiredSurfaceQuality,
   } = task
 
   const isMachineOffline = status === OFFLINE
-  const canDoGeometry = geometries.includes(task.geometry)
+  const canDoGeometry = geometries.includes(geometry)
   const canDoHardness = toolHardness >= materialHardness
-  const canDoSurfaceQuality = surfaceQuality >= task.requiredSurfaceQuality
+  const canDoSurfaceQuality = surfaceQuality >= requiredSurfaceQuality
 
   const canDo = !isMachineOffline && canDoGeometry && canDoHardness && canDoSurfaceQuality
 
   // #workpieces * c_power, c_power = 1
-  const offerPrice = _.random(1, 10)
+  const offerPrice = _.random(1, 5)
 
-  const price = canDo ? offerPrice : null
-  const timeToFinish = canDo ? _.random(1, 5) : null
+  const price = !canDo ? null : offerPrice
+  const timeToFinish = !canDo ? null : surfaceQuality - requiredSurfaceQuality
   const wearOffLevel = !canDo ? null : 1 / ((toolHardness - materialHardness) + 1)
 
   const bidOffer = {
@@ -87778,12 +87786,14 @@ function placeABid(task) {
 
 function processTask(task) {
   const { timeToFinish, wearOffLevel } = task
+  const { idleTime } = this.props
 
   this.props.status = PROCESSING
   this.props.tool.wearOffLevel += wearOffLevel
 
   const doneTask = {
     ...task,
+    idleTime,
     type: messageType.TASK_DONE,
     status: taskStatus.DONE,
   }
@@ -87981,20 +87991,7 @@ function MarketAgent(id, props) {
   this.connect(eve.system.transports.getAll())
 
   // ... other initialization
-  this.updateWebUI()
 }
-
-
-function updateWebUI() {
-  setInterval(() => {
-    const BalanceElm = document.getElementById('marketBalance')
-    const ToolingTimesElm = document.getElementById('marketToolingTimes')
-
-    BalanceElm.innerHTML = `Balance: ${this.props.balance}`
-    ToolingTimesElm.innerHTML = `Tooling times: ${this.props.machines.toolingTimes}`
-  }, 1000)
-}
-
 
 function findBestOffer(offerArray) {
   const { strategy } = this.props
@@ -88068,19 +88065,28 @@ function receiveMessage(from, message) {
 
     case messageType.TASK_DONE:
       console.log('pay for ', from)
+
       const {
-        transactionLog,
         machines: {
           toolingTimes,
         },
         toolingTimesData,
-        strategy,
+        queuedTasksData,
+        idleTimeData,
+        totalIdleTime,
       } = this.props
 
-      transactionLog.push(message)
+      const {
+        taskQueueSize,
+        idleTime: machineIdleTime,
+      } = message
 
+      this.props.totalIdleTime += machineIdleTime
       // const dataRow = [transactionLog.length, toolingTimes]
-      toolingTimesData[strategy].push(toolingTimes)
+      toolingTimesData.push(toolingTimes)
+      queuedTasksData.push(taskQueueSize)
+      this.props.idleTimeData.push(totalIdleTime)
+      console.log('>>>', idleTimeData)
 
       // eslint-disable-next-line no-case-declarations
       const payForTask = {
@@ -88116,7 +88122,6 @@ MarketAgent.prototype.broadcastMessage = broadcastMessage
 MarketAgent.prototype.transferRevenue = transferRevenue
 MarketAgent.prototype.receive = receiveMessage
 MarketAgent.prototype.collectAndSelectProposal = collectAndSelectProposal
-MarketAgent.prototype.updateWebUI = updateWebUI
 
 module.exports = MarketAgent
 
@@ -88196,9 +88201,6 @@ const TaskQueue = require('../../agents/MachineAgent/TaskQueue')
 const { OFFLINE, AVAILABLE, PROCESSING } = require('../../constants/machine_status')
 const {
   LISTENING,
-  STRATEGY_PRICE,
-  STRATEGY_TIME,
-  STRATEGY_FAIR,
 } = require('../../constants/marketplace_status')
 const {
   NUMBER_OF_TASK,
@@ -88223,18 +88225,13 @@ const market = new MarketAgent('market', {
   transactionLog: [],
   strategy: '',
   status: LISTENING,
-  toolingTimesData: {
-    [STRATEGY_PRICE]: [],
-    [STRATEGY_TIME]: [],
-    [STRATEGY_FAIR]: [],
-  },
+  toolingTimesData: [],
+  queuedTasksData: [],
+  idleTimeData: [],
+  totalIdleTime: 0,
   machines: {
     numberOfFinishTasks: 0,
     toolingTimes: 0,
-  },
-  balance: {
-    moneyIn: {},
-    moneyOut: {},
   },
 })
 
@@ -88242,41 +88239,42 @@ const machine1 = new MachineAgent('machine1', {
   balance: 10,
   geometries: ['A', 'B'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
-    hardness: 7,
-    surfaceQuality: 7,
+    hardness: _.random(4, 7),
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const machine2 = new MachineAgent('machine2', {
   balance: 10,
   geometries: ['B', 'C'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
-    hardness: 6,
-    surfaceQuality: 6,
+    hardness: _.random(4, 7),
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const machine3 = new MachineAgent('machine3', {
   balance: 10,
   geometries: ['A', 'C'],
   tool: new Tool({
-    forMaterials: ['materialA, materialB'],
-    hardness: 5,
-    surfaceQuality: 5,
+    hardness: _.random(4, 7),
+    surfaceQuality: _.random(4, 7),
   }),
   status: AVAILABLE,
   taskQueue: new TaskQueue(),
+  idleTime: 0,
 })
 
 const startSessionBtn = $('#startSessionBtn')
 const generateTaskBtn = $('#generateTasksPool')
 const visualizeGraphBtn = $('#visualizeGraph')
+const dataTextArea = $('#txtData')
 
 
 let taskId = 1
@@ -88288,8 +88286,8 @@ function generateTask() {
   const task = new Task({
     id: taskId,
     geometry: geometries[_.random(0, 2)],
-    hardness: _.random(3, 7),
-    requiredSurfaceQuality: _.random(1, 4),
+    hardness: _.random(2, 4),
+    requiredSurfaceQuality: _.random(1, 3),
   })
   taskId += 1
   return task
@@ -88311,12 +88309,24 @@ function resetAgentToolingData() {
   machine3.props.tool.wearOffLevel = 0
 }
 
-function sendTasks() {
+function resetMarketProperties() {
   const selectedStrategy = $('#strategy').val()
-  console.log('TASK POOL: ', taskPool, ' Strategy: ', selectedStrategy)
   market.props.transactionLog = []
   market.props.strategy = selectedStrategy
+  market.props.toolingTimesData = []
+  market.props.idleTimeData = []
+  market.props.totalIdleTime = 0
+}
 
+function resetMachineProperties() {
+  machine1.props.idleTime = 0
+  machine2.props.idleTime = 0
+  machine3.props.idleTime = 0
+}
+
+function sendTasks() {
+  resetMarketProperties()
+  resetMachineProperties()
   resetAgentToolingData()
 
   if (taskPool.length === 0) {
@@ -88356,55 +88366,23 @@ google.charts.load('current', { packages: ['line'] })
 
 google.charts.load('current', { packages: ['corechart', 'line'] })
 
-function drawToolingTimesChart() {
-  const data = new google.visualization.DataTable()
+
+function convertArrayToColData(array) {
+  return array.toString().replace(/,/g, '\n')
+}
+
+function getDataToTextarea() {
   const {
-    toolingTimesData: {
-      strategy_price,
-      strategy_time,
-      strategy_fair,
-    },
+    // queuedTasksData,
+    toolingTimesData,
+    // idleTimeData,
   } = market.props
-
-  data.addColumn('number', 'X')
-  data.addColumn('number', 'Best price strategy')
-  data.addColumn('number', 'Shortest time strategy')
-  data.addColumn('number', 'Lowest number of idle machine')
-
-  const combinedData = []
-  for (let i = 0; i < strategy_price.length; i++) {
-    const newRow = [i + 1, strategy_price[i], strategy_time[i], strategy_fair[i]]
-    combinedData.push(newRow)
-  }
-
-  data.addRows(combinedData)
-
-  const options = {
-    hAxis: {
-      title: 'Number of tasks',
-    },
-    vAxis: {
-      title: 'Tooling times',
-    },
-    width: 1000,
-    height: 700,
-    // curveType: 'function',
-    colors: ['red', 'green', 'blue'],
-    series: {
-      0: { lineDashStyle: [0, 0] },
-      1: { lineDashStyle: [2, 2] },
-      2: { lineDashStyle: [20, 5] },
-    },
-  }
-
-  const chart = new google.visualization.LineChart(document.getElementById('toolingTimesChart'))
-
-  chart.draw(data, options)
+  dataTextArea.text(convertArrayToColData(toolingTimesData))
 }
 
 startSessionBtn.click(() => sendTasks())
 generateTaskBtn.click(() => generateTaskPool(NUMBER_OF_TASK))
-visualizeGraphBtn.click(() => drawToolingTimesChart())
+visualizeGraphBtn.click(() => getDataToTextarea())
 
 // EVE AGENTS PART=====================END=========================
 
@@ -88569,9 +88547,9 @@ machine3Nav.click(() => {
 
 },{"../../agents/MachineAgent/MachineAgent":5,"../../agents/MachineAgent/TaskQueue":6,"../../agents/MachineAgent/Tool":7,"../../agents/MarketAgent/MarketAgent":8,"../../agents/TaskAgent/Task":9,"../../agents/TaskAgent/TaskAgent":10,"../../constants/config":12,"../../constants/machine_status":13,"../../constants/marketplace_status":14,"jquery":1,"lodash":2,"vis":4}],12:[function(require,module,exports){
 module.exports = {
-  NUMBER_OF_TASK: 5,
+  NUMBER_OF_TASK: 100,
   WEAR_LEVEL_MAX: 1.5,
-  SEND_TASK_AFTER_DELAY: 2,
+  SEND_TASK_AFTER_DELAY: 1,
 }
 
 },{}],13:[function(require,module,exports){
